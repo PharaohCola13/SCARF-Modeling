@@ -24,3 +24,6 @@
 
 ### Important Questions
 1. Does the evolution of an objects magnetic field impact the propagation system?
+
+### Tools
+1. [SPLAT!](https://www.qsl.net/kd2bd/splat.html)
