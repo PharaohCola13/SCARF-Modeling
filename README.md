@@ -1,5 +1,5 @@
 # Planetary RF Propogation Modeling
-## SURF (Surface Universality in Radio Frequency Modeling)
+## SCARF Modeling (Surface-Climate Ambiguity in Radio Frequency Modeling)
 
 [Updates on Project](https://www.researchgate.net/project/Planetary-RF-Propagation-Modeling)
 
