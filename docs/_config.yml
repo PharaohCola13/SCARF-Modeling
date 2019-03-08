@@ -1,3 +1,11 @@
 title: SCARF Modeling
 author: Spencer Riley
+
+url: "https://pharohcola13.io"
 theme: jekyll-theme-cayman
+
+social-network-links:
+  email: "spencer.riley@student.nmt.edu"
+  github: pharaohcola13
+
+show_downloads: true
