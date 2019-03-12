@@ -1,4 +1,4 @@
-# Planetary RF Propogation Modeling
+# Planetary RF Propagation Modeling
 ## SCARF Modeling (Surface-Climate Ambiguity in Radio Frequency Modeling)
 
 [Updates on Project](https://www.researchgate.net/project/Planetary-RF-Propagation-Modeling)
@@ -9,7 +9,7 @@
 1. Moon
 2. Mars
 3. Titan
-4. Planet in Trappist System
+4. TRAPPIST-1g
 
 ### Important Constants (Dependent on the location)
 * Mean Radius of planet/moon
@@ -27,3 +27,4 @@
 
 ### Tools
 1. [SPLAT!](https://www.qsl.net/kd2bd/splat.html)
+2. [TRAPPIST-1](http://www.trappist.one/#system)
