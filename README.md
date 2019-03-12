@@ -9,7 +9,7 @@
 1. Moon
 2. Mars
 3. Titan
-4. Planet in Trappist System
+4. TRAPPIST-1g
 
 ### Important Constants (Dependent on the location)
 * Mean Radius of planet/moon
