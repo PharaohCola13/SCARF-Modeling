@@ -1,4 +1,4 @@
-# Planetary RF Propogation Modeling
+# Planetary RF Propagation Modeling
 ## SCARF Modeling (Surface-Climate Ambiguity in Radio Frequency Modeling)
 
 [Updates on Project](https://www.researchgate.net/project/Planetary-RF-Propagation-Modeling)
@@ -27,3 +27,5 @@
 
 ### Tools
 1. [SPLAT!](https://www.qsl.net/kd2bd/splat.html)
+
+### 
