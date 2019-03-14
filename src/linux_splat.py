@@ -269,13 +269,19 @@ class Radio(tk.Frame):
 				print("Not a valid Plot option")
 		def event_update_plot(event):
 			update_plot(self.active_plot.get())
+
+		def write_notes():
+			note = self.notes_input.get("1.0", "end")
+			fname = filedialog.asksaveasfilename(initialdir="./", title="Leave yo File", filetypes=[("Text Files", "*.txt")])
+			filenote = open(fname, 'w')
+			filenote.write(note)
+			filenote.close()
 ##
 
 		self.notes_input = tk.Text(master, width=50, height=20)
 		self.notes_input.grid(row=0, column=4, columnspan=8, sticky='new', pady=430)
-		self.notes = self.notes_input.get("1.0","end-1c")
 
-		self.notes_button = tk.Button(master, text="Export Notes", height=2)
+		self.notes_button = tk.Button(master, text="Export Notes", height=2, command=lambda: write_notes())
 		self.notes_button.grid(row=0, column=2,columnspan=2, sticky='new',pady=430)
 
 		n = 0

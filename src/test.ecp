@@ -1,0 +1,16 @@
+---	 System Characteristics 			---
+1.0	; Star Count
+1.0	; Planet Count
+---	Main Star Properties 			---
+G Class	; Spectral Class of Main Star
+1.0 	; Solar Luminosity
+1.0	; Star Mass
+---	Local Planetary Properties			---
+50        	; Relative Humidity
+0.0       	; High Temperature (C)
+0.0       	; Low Temperature (C)
+0.0       	; Elevation (m)
+0.0       	; Atmospheric Bending Constant (N-Units)
+0.0       	; Dielectric Constant
+0.0       	; Ground Conductivity (S/m)
+0.0       	; Planetary Magnetic Field (G)
