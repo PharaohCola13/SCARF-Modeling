@@ -1,9 +1,0 @@
-50        ; Relative Humidity
-0.0       ; High Temperature (C)
-0.0       ; Low Temperature (C)
-0.0       ; Elevation (m)
-147.748   ; Atmospheric Bending Constant (N-Units)
-0.0       ; Dielectric Constant
-0.0       ; Ground Conductivity (S/m)
-0.0       ; Planetary Magnetic Field (G)
-G Class   ; Spectral Class of Main Star
