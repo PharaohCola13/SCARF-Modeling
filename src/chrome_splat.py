@@ -39,46 +39,65 @@ class Radio(tk.Frame):
 		self.createWidgets(master)
 
 	def createWidgets(self, master):
-		self.fig = plt.figure(figsize=(6, 6))
+		self.fig            = plt.figure(figsize=(5, 5))
 
-		self.name = tk.StringVar(value="RAVIOLI")
+		self.name           = tk.StringVar(value="RAVIOLI")
 
-		self.long_dms_deg = tk.DoubleVar(value=-160)
-		self.long_dms_min = tk.DoubleVar(value=0)
-		self.long_dms_sec = tk.DoubleVar(value=0.0)
+		self.long_dms_deg   = tk.DoubleVar(value=-160)
+		self.long_dms_min   = tk.DoubleVar(value=0)
+		self.long_dms_sec   = tk.DoubleVar(value=0.0)
 
-		self.lat_dms_deg = tk.DoubleVar(value=0)
-		self.lat_dms_min = tk.DoubleVar(value=0)
-		self.lat_dms_sec = tk.DoubleVar(value=0.0)
+		self.lat_dms_deg    = tk.DoubleVar(value=0)
+		self.lat_dms_min    = tk.DoubleVar(value=0)
+		self.lat_dms_sec    = tk.DoubleVar(value=0.0)
+		self.antenna_alt    = tk.DoubleVar(value=0.0)
 
-		self.antenna_alt = tk.DoubleVar(value=0.0)
+		self.name2           = tk.StringVar(value="RAVIOLI2")
 
-		self.temphigh = tk.DoubleVar(value=0.0)
-		self.templow = tk.DoubleVar(value=0.0)
-		self.tempavg = tk.DoubleVar(value=0.0)
+		self.long_dms_deg2   = tk.DoubleVar(value=-160)
+		self.long_dms_min2   = tk.DoubleVar(value=0)
+		self.long_dms_sec2   = tk.DoubleVar(value=0.0)
 
-		self.pressavg = tk.DoubleVar(value=0.0)
-		self.humiavg = tk.DoubleVar(value=0.0)
+		self.lat_dms_deg2    = tk.DoubleVar(value=0)
+		self.lat_dms_min2    = tk.DoubleVar(value=0)
+		self.lat_dms_sec2    = tk.DoubleVar(value=0.0)
 
-		self.elevation = tk.DoubleVar(value=0.0)
-		self.bfield = tk.DoubleVar(value=0.0)
-		self.bfield_rel = tk.DoubleVar(value=0.0)
-		self.star = tk.StringVar(value="G Class")
-		self.notes = tk.StringVar()
-		self.abc = tk.StringVar(value=0.0)
+		self.antenna_alt2    = tk.DoubleVar(value=0.0)
+		self.dist           = tk.DoubleVar()
+		self.mean_rad       = tk.DoubleVar()
 
-		self.dielec = tk.DoubleVar(value=0.0)
-		self.earthcond = tk.DoubleVar(value=0.0)
-		self.frequency = tk.DoubleVar(value=0.0)
-		self.rad_cli = tk.IntVar(value=5)
-		self.ant_orient = tk.IntVar(value=1)
+		self.temphigh       = tk.DoubleVar(value=0.0)
+		self.templow        = tk.DoubleVar(value=0.0)
+		self.tempavg        = tk.DoubleVar(value=0.0)
 
-		self.frac_sit = tk.DoubleVar()
-		self.frac_tim = tk.DoubleVar()
+		self.pressavg       = tk.DoubleVar(value=0.0)
+		self.humiavg        = tk.DoubleVar(value=0.0)
 
-		self.active_plot = tk.StringVar()
+		self.elevation      = tk.DoubleVar(value=0.0)
+		self.bfield         = tk.DoubleVar(value=0.0)
+		self.bfield_rel     = tk.DoubleVar(value=0.0)
 
-		self.erp = tk.DoubleVar()
+		self.star           = tk.StringVar(value="G Class")
+		self.solarm         = tk.DoubleVar(value=0.0)
+		self.solarlum       = tk.DoubleVar(value=0.0)
+
+		self.location       = tk.IntVar(value=1)
+
+		self.notes          = tk.StringVar()
+
+		self.abc            = tk.StringVar(value=0.0)
+		self.dielec         = tk.DoubleVar(value=0.0)
+		self.earthcond      = tk.DoubleVar(value=0.0)
+		self.frequency      = tk.DoubleVar(value=0.0)
+		self.rad_cli        = tk.IntVar(value=5)
+		self.ant_orient     = tk.IntVar(value=1)
+
+		self.frac_sit       = tk.DoubleVar()
+		self.frac_tim       = tk.DoubleVar()
+
+		self.active_plot    = tk.StringVar()
+
+		self.erp            = tk.DoubleVar()
 
 		canvas = FigureCanvasTkAgg(self.fig, master)
 		canvas.get_tk_widget().grid(row=0, column=0, sticky='new')
@@ -90,50 +109,75 @@ class Radio(tk.Frame):
 			fname = filedialog.asksaveasfilename(initialdir="./", title="Leave yo File",
 												 filetypes=[("Irregular Terrian Model Files", "*.lrp")])
 			filelrp = open(fname, 'w')
-			filelrp.write(str(dielectric).ljust(10) + "; Earth Dielectric Constant (Relative permittivity)" + "\n")
-			filelrp.write(str(conductivity).ljust(10) + "; Earth Conductivity (Siemens per meter)" + "\n")
-			filelrp.write(str(bending).ljust(10) + "; Atmospheric Bending Constant (N-Units)" + "\n")
-			filelrp.write(str(frequency).ljust(10) + "; Frequency in MHz (20 MHz to 20 GHz)" + "\n")
-			filelrp.write(str(radio_climate).ljust(10) + "; Radio Climate" + "\n")
-			filelrp.write(str(polarization).ljust(10) + "; Polarization (0 = Horizontal, 1 = Vertical)" + "\n")
-			filelrp.write(str(frac_sit).ljust(10) + "; Fraction of situations" + "\n")
-			filelrp.write(str(frac_time).ljust(10) + "; Fraction of time" + "\n")
-			filelrp.write(str(erp).ljust(10) + "; ERP" + "\n")
+			filelrp.write(str(dielectric).ljust(10)     + "; Earth Dielectric Constant (Relative permittivity)" + "\n")
+			filelrp.write(str(conductivity).ljust(10)   + "; Earth Conductivity (Siemens per meter)" + "\n")
+			filelrp.write(str(bending).ljust(10)        + "; Atmospheric Bending Constant (N-Units)" + "\n")
+			filelrp.write(str(frequency).ljust(10)      + "; Frequency in MHz (20 MHz to 20 GHz)" + "\n")
+			filelrp.write(str(radio_climate).ljust(10)  + "; Radio Climate" + "\n")
+			filelrp.write(str(polarization).ljust(10)   + "; Polarization (0 = Horizontal, 1 = Vertical)" + "\n")
+			filelrp.write(str(frac_sit).ljust(10)       + "; Fraction of situations" + "\n")
+			filelrp.write(str(frac_time).ljust(10)      + "; Fraction of time" + "\n")
+			filelrp.write(str(erp).ljust(10)            + "; ERP" + "\n")
 			filelrp.close()
 
 		def writeecp(rel_humid, temphigh, templow, elevation, bending, dielectric, conduct, Bfield, star):
 			fname = filedialog.asksaveasfilename(initialdir="./", title="Leave yo File",
 												 filetypes=[("Environmental Climate Profile Files", "*.ecp")])
 			fileecp = open(fname, 'w')
-			fileecp.write(str(rel_humid).ljust(10) + "; Relative Humidity" + "\n")
-			fileecp.write(str(temphigh).ljust(10) + "; High Temperature (C)" + "\n")
-			fileecp.write(str(templow).ljust(10) + "; Low Temperature (C)" + "\n")
-			fileecp.write(str(elevation).ljust(10) + "; Elevation (m)" + "\n")
-			fileecp.write(str(bending).ljust(10) +"; Atmospheric Bending Constant (N-Units)" + "\n")
+			fileecp.write(str(rel_humid).ljust(10)  + "; Relative Humidity" + "\n")
+			fileecp.write(str(temphigh).ljust(10)   + "; High Temperature (C)" + "\n")
+			fileecp.write(str(templow).ljust(10)    + "; Low Temperature (C)" + "\n")
+			fileecp.write(str(elevation).ljust(10)  + "; Elevation (m)" + "\n")
+			fileecp.write(str(bending).ljust(10)    +"; Atmospheric Bending Constant (N-Units)" + "\n")
 			fileecp.write(str(dielectric).ljust(10) + "; Dielectric Constant" + "\n")
-			fileecp.write(str(conduct).ljust(10) + "; Ground Conductivity (S/m)" + "\n")
-			fileecp.write(str(Bfield).ljust(10) + "; Planetary Magnetic Field (G)" + "\n")
-			fileecp.write(str(star).ljust(10) + "; Spectral Class of Main Star" + "\n")
+			fileecp.write(str(conduct).ljust(10)    + "; Ground Conductivity (S/m)" + "\n")
+			fileecp.write(str(Bfield).ljust(10)     + "; Planetary Magnetic Field (G)" + "\n")
+			fileecp.write(str(star).ljust(10)       + "; Spectral Class of Main Star" + "\n")
 			fileecp.close()
 
-		def writeqth(name, lo_d, lo_m, lo_s, la_d, la_m, la_s, antenna):
+		def writeqth(antenna):
 			fname = filedialog.asksaveasfilename(initialdir="./", title="Leave yo File",
 												 filetypes=[("Location Files", "*.qth")])
 			fileqth = open(fname, 'w')
-			fileqth.write(str(name) + "\n")
-			fileqth.write(str(la_d) + " " + str(la_m) + " " + str(la_s) + "\n")
-			fileqth.write(str(lo_d) + " " + str(lo_m) + " " + str(lo_s) + "\n")
-			fileqth.write(str(antenna) + "\n")
-			fileqth.close()
+			if self.location.get() == 1:
+				fileqth.write(str(self.name.get()) + "\n")
+				fileqth.write(str(self.lat_dms_deg.get()) + " " + str(self.lat_dms_min.get()) + " " + str(self.lat_dms_sec.get()) + "\n")
+				fileqth.write(str(self.long_dms_deg.get()) + " " + str(self.long_dms_min.get()) + " " + str(self.lat_dms_sec.get()) + "\n")
+				fileqth.write(str(antenna) + "\n")
+				fileqth.close()
+			elif self.location.get() == 2:
+				fileqth.write(str(self.name2.get()) + "\n")
+				fileqth.write(str(self.lat_dms_deg2.get()) + " " + str(self.lat_dms_min2.get()) + " " + str(self.lat_dms_sec2.get()) + "\n")
+				fileqth.write(str(self.long_dms_deg2.get()) + " " + str(self.long_dms_min2.get()) + " " + str(self.lat_dms_sec2.get()) + "\n")
+				fileqth.write(str(antenna) + "\n")
+				fileqth.close()
+
 
 		def readqth():
 			fname = filedialog.askopenfilename(title="Get yo file", filetypes=[("Location Files", "*.qth")])
 			fileqth = open(fname, 'r')
-			content = [x.strip() for x in fileqth.readlines()]
-			self.name.set(content[0])
-			self.long_dd.set(content[2])
-			self.lat_dd.set(content[1])
-			self.antenna_alt.set(content[3])
+			if self.location.get() == 1:
+				content = [x.strip() for x in fileqth.readlines()]
+				content = [x.split() for x in content]
+				self.name.set(content[0][0])
+				self.lat_dms_deg.set(content[1][0])
+				self.lat_dms_min.set(content[1][1])
+				self.lat_dms_sec.set(content[1][2])
+				self.long_dms_deg.set(content[2][0])
+				self.long_dms_min.set(content[2][1])
+				self.long_dms_sec.set(content[2][2])
+				self.antenna_alt.set(content[3][0])
+			if self.location.get() == 2:
+				content = [x.strip() for x in fileqth.readlines()]
+				content = [x.split() for x in content]
+				self.name2.set(content[0][0])
+				self.lat_dms_deg2.set(content[1][0])
+				self.lat_dms_min2.set(content[1][1])
+				self.lat_dms_sec2.set(content[1][2])
+				self.long_dms_deg2.set(content[2][0])
+				self.long_dms_min2.set(content[2][1])
+				self.long_dms_sec2.set(content[2][2])
+				self.antenna_alt2.set(content[3][0])
 
 		def readlrp():
 			fname = filedialog.askopenfilename(title="Get yo file",
@@ -187,6 +231,16 @@ class Radio(tk.Frame):
 			B_rel = B / (7.981e10)
 			return B_rel
 
+		def distance(self):
+			phi1 = self.lat_dms_deg.get() + self.lat_dms_min.get()/60 +self.lat_dms_sec.get()/3600
+			phi2 = self.lat_dms_deg2.get() + self.lat_dms_min2.get()/60 +self.lat_dms_sec2.get()/3600
+			long1 = self.long_dms_deg.get() + self.long_dms_min.get()/60 + self.long_dms_sec.get()/3600
+			long2 = self.long_dms_deg2.get() + self.long_dms_min2.get()/60 + self.long_dms_sec2.get()/3600
+			r = self.mean_rad.get()
+			D = 2*r*arcsin(sqrt((sin((phi2-phi1)/2)**2 + cos(phi1) *cos(phi2) * (sin((long2 - long1)/2))**2)))
+			return D
+
+
 		def temp_abc_dependence(fig, HT, LT, e, P, name, altitude):
 			plt.clf()
 			temp_abc = plt.scatter(linspace(LT + 273.15, HT + 273.15), atmo_bend(e, linspace(LT, HT), P))
@@ -229,6 +283,7 @@ class Radio(tk.Frame):
 			self.pressavg.set(round(pressure(self.elevation.get(), self.tempavg.get()), 3))
 			self.abc.set(str(round(atmo_bend(self.humiavg.get(), self.tempavg.get() + 273.15, self.pressavg.get()), 3)))
 			self.bfield_rel.set("{:0.2E}".format(bfield(self.bfield.get())))
+			self.dist.set(round(distance(self),4))
 
 		def clearqth(event):
 			self.long_dd.set(0)
@@ -264,10 +319,10 @@ class Radio(tk.Frame):
 		def event_readecp(event):
 			readecp()
 
-###
+		###
 		def event_writeqth(event):
 			writeqth(self.name.get(), self.long_dd.get(), self.lat_dd.get(), self.antenna_alt.get())
-###
+		###
 
 		def event_writelrp(event):
 			writelrp(self.dielec.get(), self.earthcond.get(), self.abc.get(), self.frequency.get(), self.rad_cli.get(),
@@ -286,11 +341,22 @@ class Radio(tk.Frame):
 			elif plot == "temp_pres":
 				temp_press_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.elevation.get(),
 									  self.name.get())
+			#			elif plot == "temp_humi":
+			#				temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.humid_scale.get(),
+			#									 self.name.get(), self.elevation.get())
 			elif plot == "temp_humi":
-				temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.humid_scale.get(),
-									 self.name.get(), self.elevation.get())
-			else:
-				print("Not a valid Plot option")
+				def plot_error():
+					top = tk.Toplevel()
+					top.title = "Error"
+					top.geometry("200x100")
+
+					msg = tk.Message(top, text="Not a Valid Plotting Option")
+					msg.grid(row=0, column=1,columnspan=2, sticky='nsew')
+
+					end = tk.Button(top, text="Dismiss", command=top.destroy)
+					end.grid(row=1, column=0, sticky='nsew', columnspan=2)
+					top.mainloop()
+				return plot_error()
 
 		def event_update_plot(event):
 			update_plot(self.active_plot.get())
@@ -310,7 +376,6 @@ class Radio(tk.Frame):
 			for x in filenote.readlines():
 				content = x
 				self.notes_input.insert("insert", content)
-
 
 		##
 
@@ -590,8 +655,7 @@ class Radio(tk.Frame):
 		filemenu.add_cascade(label="Export", menu=exportmenu)
 
 		exportmenu.add_command(label="Export QTH <Ctrl+q>",
-							   command=lambda: writeqth(self.name.get(), self.long_dd.get(), self.lat_dd.get(),
-														self.antenna_alt.get()))
+							   command=lambda: writeqth(self.antenna_alt.get()))
 		exportmenu.add_command(label="Export LRP <Ctrl+l>",
 							   command=lambda: writelrp(self.dielec.get(), self.earthcond.get(), self.abc.get(),
 														self.frequency.get(), self.rad_cli.get(), self.ant_orient.get(),
@@ -634,7 +698,9 @@ class Radio(tk.Frame):
 								 command=lambda: temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	  self.humid_scale.get(), self.name.get(),
 																	  self.elevation.get()))
-		menu.add_command(label="Update Plot", command=lambda: update_plot(self.active_plot.get()))
+		menu.add_command(label="Update Plot",activeforeground="#80FF75", command=lambda: update_plot(self.active_plot.get()))
+		menu.add_command(label="Save Plot",activeforeground="#80FF75", command=lambda: plt.savefig("{}_{}.png".format(self.name.get(),self.active_plot.get())))
+
 
 		def design(self):
 			master.config(background=dim)
