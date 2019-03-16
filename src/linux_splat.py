@@ -241,7 +241,6 @@ class Radio(tk.Frame):
 			long2   = deg2rad(float(self.long_dms_deg2.get()    + self.long_dms_min2.get()/60.    + self.long_dms_sec2.get()/3600.))
 			r = self.mean_rad.get()
 			D = r*absolute(arctan((sqrt((cos(phi2) * sin(long2-long1))**2 + (cos(phi1) * sin(phi2) - sin(phi1) * cos(phi2) * cos(long2-long1))**2)/(sin(phi1)*sin(phi2) + cos(phi1)*cos(phi2)*cos(long2-long1)))))
-			print(D)
 			return D
 
 
@@ -281,15 +280,15 @@ class Radio(tk.Frame):
 			canvas.draw_idle()
 			canvas.draw()
 
-		def path_loss_dependence(fig, D, F, name, altitude):
+		def path_loss_dependence(fig, D, F, namet,namer, altitude):
 			plt.clf()
 			wave = (2*pi)/F
-			#loss =  20*log10((4*pi*linspace(0.69,D))/wave)
-			loss = 32.45 + 200*log10(F)+20*log(10)
+			loss =  20*log10((4*pi*linspace(0.69,D))/wave)
+			#loss = 32.45 + 200*log10(F)+20*log(10)
 			path_loss = plt.scatter(linspace(0, D),loss)
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("Location: {}\nPath Loss at {} m".format(name, altitude), pad=20,
+			plt.title("From {} to {}\nPath Loss at {} m".format(namet, namer, altitude), pad=20,
 					  fontsize='medium')
 			plt.xlabel("Distance (km)")
 			plt.ylabel("Path Loss (dB)")
@@ -361,10 +360,13 @@ class Radio(tk.Frame):
 			elif plot == "temp_pres":
 				temp_press_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.elevation.get(),
 									  self.name.get())
-#			elif plot == "temp_humi":
-#				temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.humid_scale.get(),
-#									 self.name.get(), self.elevation.get())
 			elif plot == "temp_humi":
+				temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.humid_scale.get(),
+									 self.name.get(), self.elevation.get())
+			elif plot == "path_loss":
+				path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
+						 self.name.get(),self.name2.get(), self.elevation.get())
+			else:
 				def plot_error():
 					top = tk.Toplevel()
 					top.title = "Error"
@@ -829,7 +831,7 @@ class Radio(tk.Frame):
 
 		plotmenu.add_radiobutton(label="Path Loss", variable=self.active_plot, value="path_loss",
 								 command=lambda: path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
-																	  self.location.get(), self.elevation.get()))
+																	  self.name.get(),self.name2.get(), self.elevation.get()))
 
 		tempplot = tk.Menu(plotmenu)
 		plotmenu.add_cascade(label="Temperature", menu=tempplot)
