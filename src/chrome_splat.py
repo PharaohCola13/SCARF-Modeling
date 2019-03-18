@@ -648,7 +648,8 @@ class Radio(tk.Frame):
 															   self.frac_tim.get(), self.erp.get()))
 		self.lrp_button.grid(row=0, column=1, sticky='new', pady=506)
 
-		self.ecp_button = tk.Button(master, text="Generate ECP File", height=2, command=lambda: writeecp(self.humid_scale.get(), self.temphigh.get(), self.templow.get(),
+		self.ecp_button = tk.Button(master, text="Generate ECP File", height=2,
+                                    command=lambda: writeecp(self.humid_scale.get(), self.temphigh.get(), self.templow.get(),
 														self.elevation.get(), self.abc.get(), self.dielec.get(),
 														self.earthcond.get()))
 		self.ecp_button.grid(row=0, column=1, sticky='new', pady=570)
