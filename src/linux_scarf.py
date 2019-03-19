@@ -1,4 +1,5 @@
 import matplotlib
+
 matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -24,6 +25,18 @@ dim = "#303030"  # Background
 dimf = "#00C0FF"  # Font Color
 disa = "#d400ff"  # Disabled Text
 
+day = '#c6dcff'
+dayf = '#008721'
+days = '#e500ff'
+
+root_width = 1220
+root_height = 720
+offset = 0
+
+## Constants
+R = 8.3144598 # Ideal Gas Law Constant
+c = 2.99e8 # Speed of Light
+
 ## Start of Application
 class Radio(tk.Frame):
 	def __init__(self, master):
@@ -31,11 +44,7 @@ class Radio(tk.Frame):
 		self.createWidgets(master)
 
 	def createWidgets(self, master):
-		self.fig            = plt.figure(figsize=(6, 6))
-## Constants
-		R = 8.3144598 # Ideal Gas Law Constant
-		c = 2.99e8 # Speed of Light
-
+		self.fig            = plt.figure(figsize=(5, 5))
 
 		self.name           = tk.StringVar(value="Steve")
 
@@ -109,15 +118,15 @@ class Radio(tk.Frame):
 			fname = filedialog.asksaveasfilename(initialdir="./", title="Leave yo File",
 												 filetypes=[("Irregular Terrian Model Files", "*.lrp")])
 			filelrp = open(fname, 'w')
-			filelrp.write(str(dielectric)    	+ "\t; Earth Dielectric Constant (Relative permittivity)" + "\n")
-			filelrp.write(str(conductivity)		+ "\t; Earth Conductivity (Siemens per meter)" + "\n")
-			filelrp.write(str(bending)        	+ "\t; Atmospheric Bending Constant (N-Units)" + "\n")
-			filelrp.write(str(frequency)      	+ "\t; Frequency in MHz (20 MHz to 20 GHz)" + "\n")
-			filelrp.write(str(radio_climate)  	+ "\t; Radio Climate" + "\n")
-			filelrp.write(str(polarization)   	+ "\t; Polarization (0 = Horizontal, 1 = Vertical)" + "\n")
-			filelrp.write(str(frac_sit)       	+ "\t; Fraction of situations" + "\n")
-			filelrp.write(str(frac_time)      	+ "\t; Fraction of time" + "\n")
-			filelrp.write(str(erp)            	+ "\t; ERP" + "\n")
+			filelrp.write(str(dielectric).ljust(10)     + "; Earth Dielectric Constant (Relative permittivity)" + "\n")
+			filelrp.write(str(conductivity).ljust(10)   + "; Earth Conductivity (Siemens per meter)" + "\n")
+			filelrp.write(str(bending).ljust(10)        + "; Atmospheric Bending Constant (N-Units)" + "\n")
+			filelrp.write(str(frequency).ljust(10)      + "; Frequency in MHz (20 MHz to 20 GHz)" + "\n")
+			filelrp.write(str(radio_climate).ljust(10)  + "; Radio Climate" + "\n")
+			filelrp.write(str(polarization).ljust(10)   + "; Polarization (0 = Horizontal, 1 = Vertical)" + "\n")
+			filelrp.write(str(frac_sit).ljust(10)       + "; Fraction of situations" + "\n")
+			filelrp.write(str(frac_time).ljust(10)      + "; Fraction of time" + "\n")
+			filelrp.write(str(erp).ljust(10)            + "; ERP" + "\n")
 			filelrp.close()
 
 		def writeecp(rel_humid, temphigh, templow, elevation, bending, dielectric, conduct):
@@ -216,12 +225,19 @@ class Radio(tk.Frame):
 			self.dielec.set(content[10])
 			self.earthcond.set(content[11])
 
+		def Decimal_Degrees(deg, minu, sec):
+			DD = deg + (minu / 60.) + (sec / 3600.)
+			return DD
+
 		def humid_calc(T, H):
 			e = (H * 6.1121 * exp((17.502 * (T)) / ((T) + (240.97)))) / 100
 			return e
 
 		def pressure(altitude, T):
+			global R
+			g = self.grav_acc.get()
 			P = 1013.25 * (1 - ((0.0065 * altitude) / ((T + 273.15) + 0.0065 * altitude))) ** (5.257)
+			#P = (exp((altitude * g)/(R*T))) * 1/1013.25
 			return P
 
 		def atmo_bend(e, T, P):
@@ -231,6 +247,10 @@ class Radio(tk.Frame):
 		def bfield(B):
 			B_rel = B / (7.981e10)
 			return B_rel
+
+		def altitude(T):
+			z = absolute(((T-273.15) - 15.04)/(-0.00649))
+			return z
 
 		def distance(self):
 			phi1    = deg2rad(float(self.lat_dms_deg.get()      + self.lat_dms_min.get()/60.      + self.lat_dms_sec.get()/3600.))
@@ -278,25 +298,16 @@ class Radio(tk.Frame):
 			canvas.draw_idle()
 			canvas.draw()
 
-		def temp_alt_dependence(fig, HT, LT,g, M, name, altitude):
-			plt.clf()
-			z = -(R * linspace(LT + 273.15, HT + 273.15) * log(P/P_0))/(g * M)
-			temp_alt = plt.scatter(linspace(LT + 273.15, HT + 273.15), z)
-			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format(name, altitude), pad=20,
-					  fontsize='medium')
-			plt.xlabel("Temperature (K)")
-			plt.ylabel("Altitude (m)")
-			canvas.draw_idle()
-			canvas.draw()
-
 		def path_loss_dependence(fig, D, F, namet,namer, altitude):
 			plt.clf()
 			wave = (2*pi)/F
-			loss =  20*log10((4*pi*linspace(0.69,D))/wave)
-			#loss = 32.45 + 200*log10(F)+20*log(10)
-			path_loss = plt.scatter(linspace(0, D),loss)
+			d = linspace(0.1, D)
+			#U = 16.5 + 15 * log(F/100) - 0.12 * d
+			#U = 0
+			#A = -147.6 + 20 * log(d*F)
+			#loss = -147.6 + 20*log(d*F) + A + U
+			loss = 32.45 + 20 * log10(F) + 20*log10(d/1000)
+			path_loss = plt.scatter(d,loss)
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
 			plt.title("From {} to {}\nPath Loss at {} m".format(namet, namer, altitude), pad=20,
@@ -306,6 +317,43 @@ class Radio(tk.Frame):
 			canvas.draw_idle()
 			canvas.draw()
 
+		def temp_alt_dependence(fig, name, alt):
+			plt.clf()
+			g = self.grav_acc.get()
+			z = altitude(linspace(160, 320))
+#			z = -(R * linspace(LT + 273.15, HT + 273.15) * log(P/P_0))/(g * M)
+			temp_alt = plt.scatter(linspace(160,320), z)
+			plt.tick_params(axis='both')
+			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
+			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format(name, alt), pad=20,
+					  fontsize='medium')
+			plt.xlabel("Temperature (K)")
+			plt.ylabel("Altitude (m)")
+			canvas.draw_idle()
+			canvas.draw()
+
+		def soundings(self):
+			plt.clf()
+			fname = filedialog.askopenfilename(title="Get yo file",
+											   filetypes=[("Sounding Data Files", "*.txt")])
+			data = open(fname, 'r')
+			Z,T = loadtxt(fname, skiprows=4, unpack=True, usecols=(1,2))
+			if all([x>0 for x in T]) == True:
+				temp_alt = plt.scatter(T, Z)
+			else:
+				Temp = T + 273.15
+				temp_alt = plt.scatter(Temp, Z)
+			alt = Z[-1]
+			plt.tick_params(axis='both')
+			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
+			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", alt), pad=20,
+					  fontsize='medium')
+			plt.axvline(273.15)
+			plt.axhline(10000)
+			plt.xlabel("Temperature (K)")
+			plt.ylabel("Altitude (m)")
+			canvas.draw_idle()
+			canvas.draw()
 
 		def super_calc():
 			self.tempavg.set(float(self.temphigh.get()) / 2. + float(self.templow.get()) / 2.)
@@ -314,7 +362,6 @@ class Radio(tk.Frame):
 			self.abc.set(str(round(atmo_bend(self.humiavg.get(), self.tempavg.get() + 273.15, self.pressavg.get()), 3)))
 			self.bfield_rel.set("{:0.2E}".format(bfield(self.bfield.get())))
 			self.dist.set(round(distance(self),4))
-
 
 		def event_super_calc(event):
 			super_calc()
@@ -331,7 +378,7 @@ class Radio(tk.Frame):
 									 self.name.get(), self.elevation.get())
 			elif plot == "path_loss":
 				path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
-						 self.name.get(),self.name2.get(), self.elevation.get())
+									 self.name.get(),self.name2.get(), self.elevation.get())
 			elif plot == "temp_alt":
 				temp_alt_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.location.get(),
 									self.elevation.get())
@@ -344,7 +391,11 @@ class Radio(tk.Frame):
 					msg = tk.Message(top, text="Not a Valid Plotting Option")
 					msg.grid(row=0, column=1,columnspan=2, sticky='nsew')
 
-					end = tk.Button(top, text="Dismiss", command=top.destroy)
+					def quit():
+						top.quit()
+						top.destroy()
+
+					end = tk.Button(top, text="Dismiss", command=quit)
 					end.grid(row=1, column=0, sticky='nsew', columnspan=2)
 					top.mainloop()
 				return plot_error()
@@ -418,7 +469,8 @@ class Radio(tk.Frame):
 		self.sec_lo = tk.Label(master, text="''", font=('Times', 13))
 		self.sec_lo.grid(row=0, column=20, sticky='new')
 
-		## Location 2
+## Location 2
+
 
 		self.name_two = tk.Radiobutton(master, value=self.name2.get(), variable=self.location, text="Location Name:")
 		self.name_two.grid(row=0, column=1, sticky='nw', pady=30)
@@ -468,12 +520,15 @@ class Radio(tk.Frame):
 
 		self.sec_lo2 = tk.Label(master, text="''", font=('Times', 13))
 		self.sec_lo2.grid(row=0, column=20, sticky='new', pady=30)
-		self.createqth = tk.Button(master, command=lambda: writeqth(self.name.get(), self.long_dms_d.get(),
-																	self.long_dms_m.get(), self.long_dms_s.get(),
-																	self.lat_dms_d.get(), self.lat_dms_m.get(),
-																	self.lat_dms_s.get(), self.antenna_alt.get()),
+
+		##
+
+
+		self.createqth = tk.Button(master, command=lambda: writeqth(self.antenna_alt.get()),
 								   text="Generate QTH")
 		self.createqth.grid(row=0, column=1, sticky='new', columnspan=1, pady=65)
+
+
 		##
 		self.temp_high_label = tk.Label(master, text="High Temperature" + "\t" + "(" + u"\u00B0" + "C)")
 		self.temp_high_label.grid(row=0, column=1, sticky='nw', pady=110)
@@ -481,7 +536,7 @@ class Radio(tk.Frame):
 		self.temp_high_entry = tk.Entry(master, width=7, textvariable=self.temphigh)
 		self.temp_high_entry.grid(row=0, column=2, sticky='new', pady=110)
 
-		self.temp_low_label = tk.Label(master, text="Low Temperature" + "\t" + "(" + u"\u00B0" + "C)")
+		self.temp_low_label = tk.Label(master, text="Low Temperature" +"\t" + "(" + u"\u00B0" + "C)")
 		self.temp_low_label.grid(row=0, column=1, sticky='nw', pady=140)
 
 		self.temp_low_entry = tk.Entry(master, width=7, textvariable=self.templow)
@@ -496,14 +551,14 @@ class Radio(tk.Frame):
 		self.elevation_label = tk.Label(master, text="Elevation" + "\t\t" + "(m)")
 		self.elevation_label.grid(row=0, column=1, sticky='nw', pady=200)
 
-		self.elevation_entry = tk.Entry(master, textvariable=self.elevation, width=11)
+		self.elevation_entry = tk.Entry(master, textvariable=self.elevation, width=10)
 		self.elevation_entry.grid(row=0, column=2, sticky='nw', pady=200)
 
 		self.humid_label = tk.Label(master, text="Rel. Humidity" + " " * 2 + "(%)")
 		self.humid_label.grid(row=0, column=3, sticky='nw', pady=110)
 
-		self.humid_scale = tk.Scale(master, from_=0, to=100, resolution=10, orient=tk.HORIZONTAL, width=20)
-		self.humid_scale.grid(row=0, column=4, columnspan=8, sticky='new', pady=85)
+		self.humid_scale = tk.Scale(master, from_=0, to=100, resolution=10, orient=tk.HORIZONTAL, width=15)
+		self.humid_scale.grid(row=0, column=4, columnspan=8, sticky='new', pady=93)
 		self.humid_scale.set(50)
 
 		self.humid_avg_label = tk.Label(master, text="Avg. Humidity" + " " * 1 + "(mbar)")
@@ -518,6 +573,8 @@ class Radio(tk.Frame):
 		self.press_avg_calc = tk.Entry(master, textvariable=self.pressavg, width=8)
 		self.press_avg_calc.grid(row=0, column=4, sticky='nw', columnspan=1, pady=170)
 
+		##
+# LRP File Contents
 ##
 		self.lrp_value_label = tk.Label(master, text="--- LRP Quantities ---")
 		self.lrp_value_label.grid(row=0, column=1, columnspan=2, sticky='new', pady=250)
@@ -563,8 +620,7 @@ class Radio(tk.Frame):
 
 		self.erp_entry = tk.Entry(master, textvariable=self.erp, width=8)
 		self.erp_entry.grid(row=0, column=2, sticky='new', pady=460)
-		##
-
+##
 		self.radio_climate_label = tk.Label(master, text="--- Radio Climate Codes ---")
 		self.radio_climate_label.grid(row=0, column=3, columnspan=3, sticky='new', pady=250)
 
@@ -572,31 +628,30 @@ class Radio(tk.Frame):
 		self.climate_one.grid(row=0, column=3, columnspan=3, sticky='nw', pady=280)
 
 		self.climate_two = tk.Radiobutton(master, text="Continental Subtropical", value=2, variable=self.rad_cli)
-		self.climate_two.grid(row=0, column=3, columnspan=3, sticky='nw', pady=305)
+		self.climate_two.grid(row=0, column=3, columnspan=3, sticky='nw', pady=300)
 
 		self.climate_three = tk.Radiobutton(master, text="Maritime Suptropical", value=3, variable=self.rad_cli)
-		self.climate_three.grid(row=0, column=3, columnspan=3, sticky='nw', pady=330)
+		self.climate_three.grid(row=0, column=3, columnspan=3, sticky='nw', pady=320)
 
 		self.climate_four = tk.Radiobutton(master, text="Desert", value=4, variable=self.rad_cli)
-		self.climate_four.grid(row=0, column=3, columnspan=3, sticky='nw', pady=355)
+		self.climate_four.grid(row=0, column=3, columnspan=3, sticky='nw', pady=340)
 
 		self.climate_five = tk.Radiobutton(master, text="Continental Temperate", value=5, variable=self.rad_cli)
-		self.climate_five.grid(row=0, column=3, columnspan=3, sticky='nw', pady=380)
+		self.climate_five.grid(row=0, column=3, columnspan=3, sticky='nw', pady=360)
 
 		self.climate_six = tk.Radiobutton(master, text="Maritime Temperate (land)", value=6, variable=self.rad_cli)
-		self.climate_six.grid(row=0, column=3, columnspan=3, sticky='nw', pady=405)
+		self.climate_six.grid(row=0, column=3, columnspan=3, sticky='nw', pady=380)
 
 		self.climate_seven = tk.Radiobutton(master, text="Maritime Temperate (sea)", value=7, variable=self.rad_cli)
-		self.climate_seven.grid(row=0, column=3, columnspan=3, sticky='nw', pady=430)
-		##
-
+		self.climate_seven.grid(row=0, column=3, columnspan=3, sticky='nw', pady=400)
+##
 		self.ant_orient_label = tk.Label(master, text="--- Antenna Orientation ---")
 		self.ant_orient_label.grid(row=0, column=5, columnspan=6, sticky='new', pady=250)
 
 		self.ant_hori = tk.Radiobutton(master, text="Horizontal", value=0, variable=self.ant_orient)
-		self.ant_hori.grid(row=0, column=5, columnspan=5, sticky='nw', pady=290)
+		self.ant_hori.grid(row=0, column=5, columnspan=5, sticky='nw', pady=280)
 		self.ant_vert = tk.Radiobutton(master, text="Vertical", value=1, variable=self.ant_orient)
-		self.ant_vert.grid(row=0, column=5, columnspan=5, sticky='nw', pady=320)
+		self.ant_vert.grid(row=0, column=5, columnspan=5, sticky='nw', pady=300)
 
 
 		self.grav_acc_label = tk.Label(master, text="Grav. Acc. (m/s^2)")
@@ -638,107 +693,93 @@ class Radio(tk.Frame):
 
 		self.pan_calc = tk.Button(master, text="Calculate", height=2,
 								  command=lambda: super_calc())
-		self.pan_calc.grid(row=0, column=12, columnspan=9,sticky='new', pady=506)
+		self.pan_calc.grid(row=0, column=12, columnspan=4,sticky='new', pady=502)
 
+##
+# Create LRP File
+##
 
 		self.lrp_button = tk.Button(master, text="Generate LRP File", height=2,
-									  command=lambda: writelrp(self.dielec.get(), self.earthcond.get(), self.abc.get(),
-															   self.frequency.get(), self.rad_cli.get(),
-															   self.ant_orient.get(), self.frac_sit.get(),
-															   self.frac_tim.get(), self.erp.get()))
-		self.lrp_button.grid(row=0, column=1, sticky='new', pady=506)
+									command=lambda: writelrp(self.dielec.get(), self.earthcond.get(), self.abc.get(),
+															 self.frequency.get(), self.rad_cli.get(),
+															 self.ant_orient.get(), self.frac_sit.get(),
+															 self.frac_tim.get(), self.erp.get()))
+		self.lrp_button.grid(row=0, column=1, sticky='new', pady=502)
 
+		# Create ECP File
+		##
 		self.ecp_button = tk.Button(master, text="Generate ECP File", height=2,
-                                    command=lambda: writeecp(self.humid_scale.get(), self.temphigh.get(), self.templow.get(),
-														self.elevation.get(), self.abc.get(), self.dielec.get(),
-														self.earthcond.get()))
-		self.ecp_button.grid(row=0, column=1, sticky='new', pady=570)
+									command=lambda: writeecp(self.humid_scale.get(), self.temphigh.get(), self.templow.get(),
+															 self.elevation.get(), self.abc.get(), self.dielec.get(),
+															 self.earthcond.get()))
+		self.ecp_button.grid(row=0, column=1, sticky='new', pady=550)
 
 ##
 ##
 # Notes
 ##
-
-		self.notes_input = tk.Text(master, width=42, height=12.5, font=('Times', 10), fg="#00d1ff", bg="#282d2f",
+		self.notes_input = tk.Text(master, width=42, height=11, font=('Times', 10), fg="#00d1ff", bg="#282d2f",
 								   cursor="star", insertbackground="#00d1ff")
-		self.notes_input.grid(row=0, column=2, columnspan=10, sticky='new', pady=506)
+		self.notes_input.grid(row=0, column=2, columnspan=10, sticky='new', pady=502)
 
 		self.notes_button = tk.Button(master, text="Export Notes", height=2, command=lambda: write_notes())
-		self.notes_button.grid(row=0, column=1, sticky='new', pady=636)
+		self.notes_button.grid(row=0, column=1, sticky='new', pady=598)
 
 		self.note_insert = tk.Button(master, text="Import Notes", height=2, command=lambda: read_notes())
-		self.note_insert.grid(row=0, column=1, sticky='new', pady=702)
+		self.note_insert.grid(row=0, column=1, sticky='new', pady=646)
 
 ##
-
 		self.M = ImageTk.PhotoImage(Image.open("Mclass.png"))
-		self.mclass = tk.Button(master, image=self.M, command=lambda:self.star.set("M"),
-								highlightcolor="#FF0000", highlightbackground="#FF0000",
-								height=125, width=115)
-		self.mclass.grid(row=0, column=0,sticky='nw', pady=602)
+		self.mclass = tk.Button(master, image=self.M, command=lambda:self.star.set("M"), highlightcolor="#FF0000", highlightbackground="#FF0000")
+		self.mclass.grid(row=0, column=0,sticky='nw', pady=502)
 
-		self.mclass_opt = tk.Checkbutton(master, onvalue="M", text="M Class",
-										 variable=self.star, width=8)
-		self.mclass_opt.grid(row=0, column=0,sticky='nw', pady=605, padx=4)
+		self.mclass_opt = tk.Checkbutton(master, onvalue="M", text="M Class", variable=self.star)
+		self.mclass_opt.grid(row=0, column=0,sticky='nw', pady=502, padx=20)
 
 		self.K = ImageTk.PhotoImage(Image.open("Kclass.png"))
 		self.kclass = tk.Button(master, image=self.K, command=lambda:self.star.set("K"),
-								highlightcolor="#FFA200", highlightbackground="#FFA200",
-								height=125, width=115)
-		self.kclass.grid(row=0, column=0, sticky='nw', pady=602, padx=(125,0))
+								highlightcolor="#FFA200", highlightbackground="#FFA200")
+		self.kclass.grid(row=0, column=0, sticky='nw', pady=502, padx=(110,0))
 
-		self.kclass_opt = tk.Checkbutton(master, onvalue="K", text="K Class",
-										 variable=self.star, width=8)
-		self.kclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=(129,0))
+		self.kclass_opt = tk.Checkbutton(master, onvalue="K", text="K Class", variable=self.star)
+		self.kclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=(130,0))
 
 		self.G = ImageTk.PhotoImage(Image.open("Gclass.png"))
-		self.gclass = tk.Button(master, image=self.G, command=lambda:self.star.set("G"),
-								highlightcolor="#FAD800", highlightbackground="#FAD800",
-								height=125, width=115)
-		self.gclass.grid(row=0, column=0, sticky='nw', pady=602, padx=250)
+		self.gclass = tk.Button(master, image=self.G, command=lambda:self.star.set("G"),highlightcolor="#FAD800", highlightbackground="#FAD800")
+		self.gclass.grid(row=0, column=0, sticky='nw', pady=502, padx=220)
 
-		self.gclass_opt = tk.Checkbutton(master, onvalue="G", text="G Class",
-										 variable=self.star ,width=8)
-		self.gclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=254)
+		self.gclass_opt = tk.Checkbutton(master, onvalue="G", text="G Class", variable=self.star)
+		self.gclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=240)
 
 		self.F = ImageTk.PhotoImage(Image.open("Fclass.png"))
 		self.fclass = tk.Button(master, image=self.F, command=lambda:self.star.set("F"),
-								highlightcolor="#FFF48B", highlightbackground="#FFF48B",
-								height=125, width=115)
-		self.fclass.grid(row=0, column=0, sticky='nw', pady=602, padx=(375,0))
+								highlightcolor="#FFF48B", highlightbackground="#FFF48B")
+		self.fclass.grid(row=0, column=0, sticky='nw', pady=502, padx=(330,0))
 
-		self.fclass_opt = tk.Checkbutton(master, onvalue="F", text="F Class",
-										 variable=self.star, width=8)
-		self.fclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=(379,0))
+		self.fclass_opt = tk.Checkbutton(master, onvalue="F", text="F Class", variable=self.star)
+		self.fclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=(350,0))
 
 		self.A = ImageTk.PhotoImage(Image.open("Aclass.png"))
 		self.aclass = tk.Button(master, image=self.A, command=lambda:self.star.set("A"),
-								highlightcolor="#8BF4FF", highlightbackground="#8BF4FF",
-								height=125, width=115)
-		self.aclass.grid(row=0, column=0, sticky='nw', pady=602, padx=(500, 0))
+								highlightcolor="#8BF4FF", highlightbackground="#8BF4FF")
+		self.aclass.grid(row=0, column=0, sticky='nw', pady=502, padx=(440, 0))
 
-		self.aclass_opt = tk.Checkbutton(master, onvalue="A", text="A Class",
-										 variable=self.star, width=8)
-		self.aclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=(504,0))
+		self.aclass_opt = tk.Checkbutton(master, onvalue="A", text="A Class", variable=self.star)
+		self.aclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=(460,0))
 
 		self.O = ImageTk.PhotoImage(Image.open("Oclass.png"))
-		self.oclass = tk.Button(master, image=self.O, command=lambda: self.star.set("O"),
-								highlightcolor=dimf, highlightbackground=dimf,
-								height=125, width=115)
-		self.oclass.grid(row=0, column=0, sticky='nw', pady=747, padx=(0,0))
+		self.oclass = tk.Button(master, image=self.O, command=lambda: self.star.set("O"), highlightcolor=dimf, highlightbackground=dimf)
+		self.oclass.grid(row=0, column=0, sticky='nw', pady=612, padx=(0,0))
 
-		self.oclass_opt = tk.Checkbutton(master, onvalue="O", text="O Class",
-										 variable=self.star, width=8)
-		self.oclass_opt.grid(row=0, column=0, sticky='nw', pady=750, padx=(4, 0))
+		self.oclass_opt = tk.Checkbutton(master, onvalue="O", text="O Class", variable=self.star)
+		self.oclass_opt.grid(row=0, column=0, sticky='nw', pady=612, padx=(20, 0))
 
 		self.D = ImageTk.PhotoImage(Image.open("Dclass.png"))
-		self.dclass = tk.Button(master, image=self.D, command=lambda:self.star.set("D"),
-								height=125, width=115)
-		self.dclass.grid(row=0, column=0, sticky='nw', pady=747, padx=(125,0))
+		self.dclass = tk.Button(master, image=self.D, command=lambda:self.star.set("D"))
+		self.dclass.grid(row=0, column=0, sticky='nw', pady=612, padx=(110,0))
 
-		self.dclass_opt = tk.Checkbutton(master, onvalue="D", text="D Class",
-										 variable=self.star, width=8)
-		self.dclass_opt.grid(row=0, column=0, sticky='nw', pady=750, padx=(129, 0))
+		self.dclass_opt = tk.Checkbutton(master, onvalue="D", text="D Class", variable=self.star)
+		self.dclass_opt.grid(row=0, column=0, sticky='nw', pady=612, padx=(130, 0))
 
 
 		self.gclass_opt.config(bg=dim, fg="#FAD800", activebackground=dim, highlightthickness=1,
@@ -792,7 +833,7 @@ class Radio(tk.Frame):
 		exportmenu.add_command(label="Export ECP <Ctrl+e>",
 							   command=lambda: writeecp(self.humid_scale.get(), self.temphigh.get(), self.templow.get(),
 														self.elevation.get(), self.abc.get(), self.dielec.get(),
-														self.earthcond.get()))
+														self.earthcond.get(), self.bfield.get(), self.star.get()))
 
 		master.bind("<Return>", event_super_calc)
 		master.bind("<Prior>", event_update_plot)
@@ -803,6 +844,8 @@ class Radio(tk.Frame):
 		plotmenu.add_radiobutton(label="Path Loss", variable=self.active_plot, value="path_loss",
 								 command=lambda: path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
 																	  self.name.get(),self.name2.get(), self.elevation.get()))
+		plotmenu.add_radiobutton(label="Sounding", variable=self.active_plot, value="sound",
+								 command=lambda: soundings(self))
 		tempplot = tk.Menu(plotmenu)
 		plotmenu.add_cascade(label="Temperature", menu=tempplot)
 
@@ -818,12 +861,11 @@ class Radio(tk.Frame):
 								 command=lambda: temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	  self.humid_scale.get(), self.name.get(),
 																	  self.elevation.get()))
-	#	tempplot.add_radiobutton(label="Temp. vs Altitude", variable=self.active_plot, value="temp_alt",
-	#							 command=lambda: temp_alt_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.location.get(),
-	#								self.elevation.get()))
+		tempplot.add_radiobutton(label="Temp. vs Altitude", variable=self.active_plot, value="temp_alt",
+								 command=lambda: temp_alt_dependence(self.fig, self.location.get(), self.elevation.get()))
+
 		menu.add_command(label="Update Plot",activeforeground="#80FF75", command=lambda: update_plot(self.active_plot.get()))
 		menu.add_command(label="Save Plot",activeforeground="#80FF75", command=lambda: plt.savefig("{}_{}.png".format(self.name.get(),self.active_plot.get())))
-
 
 		def design(self):
 			master.config(background=dim)
@@ -836,7 +878,7 @@ class Radio(tk.Frame):
 					  self.deg_lo, self.min_lo, self.sec_lo, self.deg_la, self.min_la, self.sec_la,
 					  self.bfield_label, self.bfield_rel_label, self.gclass, self.mclass, self.oclass, self.dclass, self.kclass,
 					  self.fclass, self.aclass, self.long_dms_label2, self.deg_lo2, self.min_lo2, self.sec_lo2,
-					self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.atmo_mole_label, self.grav_acc_label,
+					  self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.atmo_mole_label, self.grav_acc_label,
 					  self.lrp_value_label]
 			button = [self.lrp_button, self.pan_calc, self.createqth, self.notes_button, self.ecp_button, self.note_insert]
 			scales = [self.humid_scale]
@@ -870,14 +912,13 @@ class Radio(tk.Frame):
 
 if __name__ == '__main__':
 	root = tk.Tk()
-	icon = ImageTk.PhotoImage(file='radio.png')
+	icon = ImageTk.PhotoImage(file='icon.png')
 	root.tk.call('wm', 'iconphoto', root._w, icon)
-
 	Radio(root)
 
-	root.title("SPLAT! Configuratin File Generator")
-#	root.geometry(str(root_width) + "x" + str(root_height))  #
-	#root.attributes('-fullscreen', True)
+	root.title("SPLAT! Configuration File Generator")
+	root.geometry(str(root_width) + "x" + str(root_height))  #
+   # root.attributes('-fullscreen', True)
 
 	#	root.maxsize(str(root_width), str(root_height))
 	#	root.minsize(str(600), str(root_height))

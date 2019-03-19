@@ -4,44 +4,77 @@
 	<meta charset="UTF-8">
 
 <!-- Begin Jekyll SEO tag v2.5.0 -->
-<title>Planetary RF Propogation Modeling | SCARF Modeling</title>
+<title>Home</title>
 <meta name="generator" content="Jekyll v3.7.4" />
 <meta property="og:title" content="Planetary RF Propagation Modeling" />
 <meta name="author" content="Spencer Riley" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Surface-Climate Ambiguity in Radio Frequency Modeling research project" />
+
 <meta property="og:description" content="Surface-Climate Ambiguity in Radio Frequency Modeling research project" />
-<link rel="canonical" href="http://localhost:4000/" />
-<meta property="og:url" content="http://localhost:4000/" />
+
+<link rel="canonical" href="index.html" />
+<meta property="og:url" content="index.html" />
 <meta property="og:site_name" content="SCARF Modeling" />
-<script type="application/ld+json">
-{"name":"SCARF Modeling","description":"Surface-Climate Ambiguity in Radio Frequency Modeling research project","author":{"@type":"Person","name":"Spencer Riley"},"@type":"WebSite","url":"http://localhost:4000/","headline":"Planetary RF Propogation Modeling","@context":"http://schema.org"}</script>
+<link rel="icon" href="assets/images/icon.png">
 <!-- End Jekyll SEO tag -->
 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="./assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/style.css">
   </head>
 	<body>
 	<section class="page-header">
 	  <h1 class="project-name">SCARF Modeling</h1>
 	  <h2 class="project-tagline">Surface-Climate Ambiguity in Radio Frequency Modeling research project</h2>
 
-	  <a href="https://github.com/PharaohCola13/SCARF-Modeling" class="btn">View on GitHub</a>
+	<a href="index.html" class="btn red">Home</a>
+	<a href="https://github.com/PharaohCola13/SCARF-Modeling" class="btn orange">View on GitHub</a>
+	<a href="posts.html" class="btn yellow">Project Log</a>
+	<a href="profiles.html" class="btn green">Profiles</a>
 	</section>
 	<section class="main-content">
-	  <h1>Planetary RF Propagation Modeling</h1>
-	  <h2>SCARF Modeling (Surface-Climate Ambiguity in Radio Frequency)</h2>
+		<h2>Goal</h2>
+		<hr>
+		<p style="text-align: justify; text-indent: 40px">
+			To develop a generalized model of radio propagation that
+			takes into account variations of atmospheric and astrophysical phenomena through the use of profiles.
+			The interface for the model will have the capabilities to import the profiles and make a variety of
+			calculations and analyze data regarding radio propagation on any planet or moon, anywhere. The interface for this
+			model will have substantial overlap with SPLAT!, but will allow a wider variety of inputs for a wider range
+			of analysis.
+		</p>
+		<h2>Methodology</h2>
+		<hr>
+		<p style="text-align: justify; text-indent: 40px">
+			To achieve the Goal, there must be an understanding of the impacts of magnetic field
+			interactions in relation with solar and atmospheric climate, the dielectric properties of the surface, etc.
+			Thus, there are four locations that will be examined, each a laboratory for a different property.
+		</p>
 
-	  <p><a href="https://www.researchgate.net/project/Planetary-RF-Propagation-Modeling">Updates on Project</a></p>
+		<p style="text-align: justify;text-indent: 40px">
+			The Moon will be examined because of it's exposure to solar
+			winds and the magnetic field interactions with Earth.  Mars will be examined for it's atmospheric
+			properties as well as the impact of solar weather on the surface, since Mars does not have a internally
+			generated magnetic field, yet still possesses an atmosphere. Titan will be studied for its
+			atmospheric/geological properties and for the electromagnetic interactions with Saturn. The TRAPPIST-1 planet
+			will provide insight into the impact of stellar activity of the Red Dwarf star has on the climate of the
+			planet, if there is any.
+		</p>
 
-	  <h3>Goal: Develop a generalized model of RF propagation to use on other planets</h3>
-
-	  <h3>Expected testing locations in order of difficulty</h3>
+		<p style="text-align: justify;text-indent: 40px">
+			Each of these laboratories will have a data file describing the atmospheric and astrophysical properties for the
+			planet or moon, an example profile can be found <a href="exmaple.ecp">here</a>. <i>(It should be noted that the contents
+			of the profiles are subject to change as the project continues.)</i> The profiles will then be uploaded into the
+			SCARF Dashboard for development and testing of the dashboard. All data files and resources will be posted on this
+			site.
+		</p>
+		<h2>Information</h2>
+        <hr>
+	  <h3>Expected testing locations</h3>
 	  <ol>
 		<li>Moon</li>
 		<li>Mars</li>
 		<li>Titan</li>
-		<li>TRAPPIST-1g</li>
+		<li>TRAPPIST-1g <i>(Subject to change)</i></li>
 	  </ol>
 
 	  <h3>Important Constants (Dependent on the location)</h3>
@@ -49,6 +82,7 @@
 		<li>Mean Radius of planet/moon</li>
 		<li>Dielectric Constant</li>
 		<li>Ground Conductivity</li>
+		<li>Magnetic Field Strength of planet/moon</li>
 	  </ul>
 
 	  <h3>Important Variables (Dependent on the location)</h3>
@@ -62,22 +96,23 @@
 	  <h3>Important Questions</h3>
 	  <ol>
 		<li>Does the evolution of an objects magnetic field impact the propagation system?</li>
+		<li>How does Solar Winds and other astrophysical phenomena impact the model?</li>
+		<li>Why can't the data just appear?</li>
 	  </ol>
 
-	  <h3 id="tools">Tools</h3>
+	  <h2>Resources</h2><hr>
 	  <ol>
 		<li><a href="https://www.qsl.net/kd2bd/splat.html">SPLAT!</a></li>
 		<li><a href="http://weather.uwyo.edu/upperair/sounding.html">Terrestrial Sounding Data</a></li>
 		<li><a href="http://www-mars.lmd.jussieu.fr/mcd_python/">Martian Climate Data</a></li>
 		<li><a href="https://atmos.nmsu.edu/PDS/data/PDS4/titan_profiles_bundle/data/">Titan Sounding Data</a></li>
 	  </ol>
-	  <h3>All academic articles for this project can be viewed via Dropbox <a href="https://www.dropbox.com/sh/1rb5arfwh02503b/AAAcWBVhHqD8XXHUJdVfu7oCa?dl=0">here</a>.</h3>
+	  <h4>All academic articles for this project can be viewed via Dropbox <a href="https://www.dropbox.com/sh/1rb5arfwh02503b/AAAcWBVhHqD8XXHUJdVfu7oCa?dl=0">here</a>.</h4>
 	  <footer class="site-footer">
 
-		  <span class="site-footer-owner"><a href="https://github.com/PharaohCola13/SCARF-Modeling">SCARF-Modeling</a> is maintained by <a href="https://github.com/PharaohCola13">PharaohCola13</a>.</span>
+		  <span class="site-footer-owner"><a href="https://github.com/PharaohCola13/SCARF-Modeling">SCARF-Modeling</a> is maintained by <a href="https://PharaohCola13.github.io">PharaohCola13</a>.</span>
 
-		<span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
-	  </footer>
+	 </footer>
 	</section>
   </body>
 

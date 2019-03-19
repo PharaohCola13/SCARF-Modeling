@@ -215,7 +215,7 @@ class Radio(tk.Frame):
 
 if __name__ == '__main__':
 	root = tk.Tk()
-	icon = ImageTk.PhotoImage(file='radio.png')
+	icon = ImageTk.PhotoImage(file='icon.png')
 	root.tk.call('wm', 'iconphoto', root._w, icon)
 
 	Radio(root)
