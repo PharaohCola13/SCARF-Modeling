@@ -1,9 +1,9 @@
 G	    ; Spectral Class of Main Star
-0.605	; Magnetic Field (G)
-9.806	; Gravitational Acceleration (m/s^2)
-6371.0	; Mean Radius (km)
----	---	---	---	---	---	
-50	    ; Relative Humidity
+0.2 	; Magnetic Field (G)
+1.62	; Gravitational Acceleration (m/s^2)
+1737.1	; Mean Radius (km)
+---	---	---	---	---	---
+0	    ; Relative Humidity
 100	    ; High Temperature (C)
 0.0	    ; Low Temperature (C)
 0.0	    ; Elevation (m)
