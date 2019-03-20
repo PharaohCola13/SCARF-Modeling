@@ -729,14 +729,14 @@ class Radio(tk.Frame):
 		self.note_insert.grid(row=0, column=1, sticky='new', pady=646)
 
 ##
-		self.M = ImageTk.PhotoImage(Image.open("Mclass.png"))
+		self.M = ImageTk.PhotoImage(Image.open("images/Mclass.png"))
 		self.mclass = tk.Button(master, image=self.M, command=lambda:self.star.set("M"), highlightcolor="#FF0000", highlightbackground="#FF0000")
 		self.mclass.grid(row=0, column=0,sticky='nw', pady=502)
 
 		self.mclass_opt = tk.Checkbutton(master, onvalue="M", text="M Class", variable=self.star)
 		self.mclass_opt.grid(row=0, column=0,sticky='nw', pady=502, padx=20)
 
-		self.K = ImageTk.PhotoImage(Image.open("Kclass.png"))
+		self.K = ImageTk.PhotoImage(Image.open("images/Kclass.png"))
 		self.kclass = tk.Button(master, image=self.K, command=lambda:self.star.set("K"),
 								highlightcolor="#FFA200", highlightbackground="#FFA200")
 		self.kclass.grid(row=0, column=0, sticky='nw', pady=502, padx=(110,0))
@@ -744,14 +744,14 @@ class Radio(tk.Frame):
 		self.kclass_opt = tk.Checkbutton(master, onvalue="K", text="K Class", variable=self.star)
 		self.kclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=(130,0))
 
-		self.G = ImageTk.PhotoImage(Image.open("Gclass.png"))
+		self.G = ImageTk.PhotoImage(Image.open("images/Gclass.png"))
 		self.gclass = tk.Button(master, image=self.G, command=lambda:self.star.set("G"),highlightcolor="#FAD800", highlightbackground="#FAD800")
 		self.gclass.grid(row=0, column=0, sticky='nw', pady=502, padx=220)
 
 		self.gclass_opt = tk.Checkbutton(master, onvalue="G", text="G Class", variable=self.star)
 		self.gclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=240)
 
-		self.F = ImageTk.PhotoImage(Image.open("Fclass.png"))
+		self.F = ImageTk.PhotoImage(Image.open("images/Fclass.png"))
 		self.fclass = tk.Button(master, image=self.F, command=lambda:self.star.set("F"),
 								highlightcolor="#FFF48B", highlightbackground="#FFF48B")
 		self.fclass.grid(row=0, column=0, sticky='nw', pady=502, padx=(330,0))
@@ -759,7 +759,7 @@ class Radio(tk.Frame):
 		self.fclass_opt = tk.Checkbutton(master, onvalue="F", text="F Class", variable=self.star)
 		self.fclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=(350,0))
 
-		self.A = ImageTk.PhotoImage(Image.open("Aclass.png"))
+		self.A = ImageTk.PhotoImage(Image.open("images/Aclass.png"))
 		self.aclass = tk.Button(master, image=self.A, command=lambda:self.star.set("A"),
 								highlightcolor="#8BF4FF", highlightbackground="#8BF4FF")
 		self.aclass.grid(row=0, column=0, sticky='nw', pady=502, padx=(440, 0))
@@ -767,14 +767,14 @@ class Radio(tk.Frame):
 		self.aclass_opt = tk.Checkbutton(master, onvalue="A", text="A Class", variable=self.star)
 		self.aclass_opt.grid(row=0, column=0, sticky='nw', pady=502, padx=(460,0))
 
-		self.O = ImageTk.PhotoImage(Image.open("Oclass.png"))
+		self.O = ImageTk.PhotoImage(Image.open("images/Oclass.png"))
 		self.oclass = tk.Button(master, image=self.O, command=lambda: self.star.set("O"), highlightcolor=dimf, highlightbackground=dimf)
 		self.oclass.grid(row=0, column=0, sticky='nw', pady=612, padx=(0,0))
 
 		self.oclass_opt = tk.Checkbutton(master, onvalue="O", text="O Class", variable=self.star)
 		self.oclass_opt.grid(row=0, column=0, sticky='nw', pady=612, padx=(20, 0))
 
-		self.D = ImageTk.PhotoImage(Image.open("Dclass.png"))
+		self.D = ImageTk.PhotoImage(Image.open("images/Dclass.png"))
 		self.dclass = tk.Button(master, image=self.D, command=lambda:self.star.set("D"))
 		self.dclass.grid(row=0, column=0, sticky='nw', pady=612, padx=(110,0))
 
@@ -912,7 +912,7 @@ class Radio(tk.Frame):
 
 if __name__ == '__main__':
 	root = tk.Tk()
-	icon = ImageTk.PhotoImage(file='icon.png')
+	icon = ImageTk.PhotoImage(file='images/icon.png')
 	root.tk.call('wm', 'iconphoto', root._w, icon)
 	Radio(root)
 

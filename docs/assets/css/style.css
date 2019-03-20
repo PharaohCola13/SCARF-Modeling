@@ -87,18 +87,29 @@ hr { box-sizing: content-box; height: 0; }
 pre { overflow: auto; }
 
 /** Address odd `em`-unit font size rendering in all browsers. */
-code, kbd, pre, samp { font-family: monospace, monospace; font-size: 1em; }
+code, kbd, pre, samp {
+    font-family: monospace, monospace;
+    font-size: 1em;
+}
 
 /* Forms ========================================================================== */
 /** Known limitation: by default, Chrome and Safari on OS X allow very limited styling of `select`, unless a `border` property is set. */
 /** 1. Correct color not being inherited. Known issue: affects color of disabled elements. 2. Correct font properties not being inherited. 3. Address margins set differently in Firefox 4+, Safari, and Chrome. */
-button, input, optgroup, select, textarea { color: inherit; /* 1 */ font: inherit; /* 2 */ margin: 0; /* 3 */ }
+button, input, optgroup, select, textarea {
+    color: inherit; /* 1 */
+    font: inherit; /* 2 */
+    margin: 0; /* 3 */
+}
 
 /** Address `overflow` set to `hidden` in IE 8/9/10/11. */
-button { overflow: visible; }
+button {
+    overflow: visible;
+}
 
 /** Address inconsistent `text-transform` inheritance for `button` and `select`. All other form control elements do not inherit `text-transform` values. Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera. Correct `select` style inheritance in Firefox. */
-button, select { text-transform: none; }
+button, select {
+    text-transform: none;
+}
 
 /** 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio` and `video` controls. 2. Correct inability to style clickable `input` types in iOS. 3. Improve usability and consistency of cursor style between image-type `input` and others. */
 button, html input[type="button"], input[type="reset"], input[type="submit"] { -webkit-appearance: button; /* 2 */ cursor: pointer; /* 3 */ }
@@ -132,23 +143,39 @@ fieldset {
 }
 
 /** 1. Correct `color` not being inherited in IE 8/9/10/11. 2. Remove padding so people aren't caught out if they zero out fieldsets. */
-legend { border: 0; /* 1 */ padding: 0; /* 2 */ }
+legend {
+    border: 0; /* 1 */
+    padding: 0; /* 2 */
+}
 
 /** Remove default vertical scrollbar in IE 8/9/10/11. */
-textarea { overflow: auto; }
+textarea {
+    overflow: auto;
+}
 
 /** Don't inherit the `font-weight` (applied by a rule above). NOTE: the default cannot safely be changed in Chrome and Safari on OS X. */
-optgroup { font-weight: bold; }
+optgroup {
+    font-weight: bold; }
+
 
 /* Tables ========================================================================== */
 /** Remove most spacing between table cells. */
-table { border-collapse: collapse; border-spacing: 0; }
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
 
-td, th { padding: 0; }
+td, th {
+    padding: 0;
+}
 
-.highlight table td { padding: 5px; }
+.highlight table td {
+    padding: 5px;
+}
 
-.highlight table pre { margin: 0; }
+.highlight table pre {
+    margin: 0;
+}
 
 .highlight {
   background-color: #f8f8f8;
@@ -166,7 +193,7 @@ body {
 }
 
 a {
-  color: #db9ce2;
+    color: #00c6ff;
   text-decoration: none;
 }
 a:hover {
@@ -174,19 +201,18 @@ a:hover {
 }
 
 .btn {
-  display: inline-block;
-  margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  border-color: rgba(255, 255, 255, 0.2);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 0.3rem;
-  transition: color 0.2s,
-  background-color 0.2s,
-  border-color 0.2s;
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: rgb(255, 255, 255);
+    border-color: rgb(0, 0, 0);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 0.3rem;
+    transition-duration: 0.7s;
+    -webkit-transition-duration: 0.4s;
 }
 .red{
-  background-color: rgba(231, 0, 34, 0.66);
+  background-color: rgba(231, 0, 34, 0.69);
 }
 .orange{
   background-color: rgba(234, 130, 0, 0.81);
@@ -198,11 +224,18 @@ a:hover {
   background-color: rgba(0, 180, 6, 0.81);
 }
 
+.active{
+	opacity:0.3;
+    color: #000;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-color: #ffffff;
+    pointer-events: none;
+}
+
 .btn:hover {
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    box-shadow: 0 0px 0px 0 rgba(0,0,0,1),0 10px 5px 0 rgba(0,0,0,1);
 }
 .btn + .btn {
   margin-left: 1rem;
@@ -230,14 +263,13 @@ a:hover {
 }
 .post footer{
   text-align: center;
-  color: rgb(255, 91, 116)
+  color: rgb(70, 213, 255)
 }
 
 .page-header {
-  color: #fff ;
-  text-align: center;
-  background-color: #159957;
-  background-image: linear-gradient(120deg, #aa0da6, #0886aa);
+	color: #ffffff;
+	text-align: center;
+   background-image: linear-gradient(120deg, #aa0da6, #08a1cb, #169c02);
 }
 @media screen and (min-width: 64em) {
   .page-header {
@@ -335,7 +367,7 @@ a:hover {
   margin-top: 2rem;
   margin-bottom: 1rem;
   font-weight: normal;
-  color: #e76f00;
+  color: #ff9c00;
 }
 .main-content h3{
   margin-top: 2rem;
@@ -347,7 +379,7 @@ a:hover {
   margin-top: 2rem;
   margin-bottom: 1rem;
   font-weight: normal;
-  color: #19e700;
+    color: #00e223;
 }
 .main-content h5{
   margin-top: 2rem;
