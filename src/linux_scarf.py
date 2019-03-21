@@ -116,17 +116,17 @@ class Radio(tk.Frame):
 		def writelrp(dielectric, conductivity, bending, frequency, radio_climate, polarization, frac_sit, frac_time,
 					 erp):
 			fname = filedialog.asksaveasfilename(initialdir="./", title="Leave yo File",
-												 filetypes=[("Irregular Terrian Model Files", "*.lrp")])
+												 filetypes=[("Irregular Terrain Model Files", "*.lrp")])
 			filelrp = open(fname, 'w')
-			filelrp.write(str(dielectric).ljust(10)     + "; Earth Dielectric Constant (Relative permittivity)" + "\n")
-			filelrp.write(str(conductivity).ljust(10)   + "; Earth Conductivity (Siemens per meter)" + "\n")
-			filelrp.write(str(bending).ljust(10)        + "; Atmospheric Bending Constant (N-Units)" + "\n")
-			filelrp.write(str(frequency).ljust(10)      + "; Frequency in MHz (20 MHz to 20 GHz)" + "\n")
-			filelrp.write(str(radio_climate).ljust(10)  + "; Radio Climate" + "\n")
-			filelrp.write(str(polarization).ljust(10)   + "; Polarization (0 = Horizontal, 1 = Vertical)" + "\n")
-			filelrp.write(str(frac_sit).ljust(10)       + "; Fraction of situations" + "\n")
-			filelrp.write(str(frac_time).ljust(10)      + "; Fraction of time" + "\n")
-			filelrp.write(str(erp).ljust(10)            + "; ERP" + "\n")
+			filelrp.write(str(dielectric).ljust(10)     + "\t; Earth Dielectric Constant (Relative permittivity)" + "\n")
+			filelrp.write(str(conductivity).ljust(10)   + "\t; Earth Conductivity (Siemens per meter)" + "\n")
+			filelrp.write(str(bending).ljust(10)        + "\t; Atmospheric Bending Constant (N-Units)" + "\n")
+			filelrp.write(str(frequency).ljust(10)      + "\t; Frequency in MHz (20 MHz to 20 GHz)" + "\n")
+			filelrp.write(str(radio_climate).ljust(10)  + "\t; Radio Climate" + "\n")
+			filelrp.write(str(polarization).ljust(10)   + "\t; Polarization (0 = Horizontal, 1 = Vertical)" + "\n")
+			filelrp.write(str(frac_sit).ljust(10)       + "\t; Fraction of situations" + "\n")
+			filelrp.write(str(frac_time).ljust(10)      + "\t; Fraction of time" + "\n")
+			filelrp.write(str(erp).ljust(10)            + "\t; ERP" + "\n")
 			filelrp.close()
 
 		def writeecp(rel_humid, temphigh, templow, elevation, bending, dielectric, conduct):
@@ -317,41 +317,23 @@ class Radio(tk.Frame):
 			canvas.draw_idle()
 			canvas.draw()
 
-		def temp_alt_dependence(fig, name, alt):
-			plt.clf()
-			g = self.grav_acc.get()
-			z = altitude(linspace(160, 320))
-#			z = -(R * linspace(LT + 273.15, HT + 273.15) * log(P/P_0))/(g * M)
-			temp_alt = plt.scatter(linspace(160,320), z)
-			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format(name, alt), pad=20,
-					  fontsize='medium')
-			plt.xlabel("Temperature (K)")
-			plt.ylabel("Altitude (m)")
-			canvas.draw_idle()
-			canvas.draw()
 
 		def soundings(self):
 			plt.clf()
 			fname = filedialog.askopenfilename(title="Get yo file",
 											   filetypes=[("Sounding Data Files", "*.txt")])
 			data = open(fname, 'r')
-			Z,T = loadtxt(fname, skiprows=4, unpack=True, usecols=(1,2))
-			if all([x>0 for x in T]) == True:
-				temp_alt = plt.scatter(T, Z)
-			else:
-				Temp = T + 273.15
-				temp_alt = plt.scatter(Temp, Z)
-			alt = Z[-1]
+			Z = loadtxt(fname, skiprows=1, unpack=True)[0]
+			T = loadtxt(fname, skiprows=1, unpack=True)[1]
+			temp_alt = plt.scatter(T, Z)
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", alt), pad=20,
+			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", Z[-1]), pad=20,
 					  fontsize='medium')
 			plt.axvline(273.15)
-			plt.axhline(10000)
+			plt.axhline(10)
 			plt.xlabel("Temperature (K)")
-			plt.ylabel("Altitude (m)")
+			plt.ylabel("Altitude (km)")
 			canvas.draw_idle()
 			canvas.draw()
 
@@ -379,9 +361,6 @@ class Radio(tk.Frame):
 			elif plot == "path_loss":
 				path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
 									 self.name.get(),self.name2.get(), self.elevation.get())
-			elif plot == "temp_alt":
-				temp_alt_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.location.get(),
-									self.elevation.get())
 			else:
 				def plot_error():
 					top = tk.Toplevel()
@@ -861,9 +840,6 @@ class Radio(tk.Frame):
 								 command=lambda: temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	  self.humid_scale.get(), self.name.get(),
 																	  self.elevation.get()))
-		tempplot.add_radiobutton(label="Temp. vs Altitude", variable=self.active_plot, value="temp_alt",
-								 command=lambda: temp_alt_dependence(self.fig, self.location.get(), self.elevation.get()))
-
 		menu.add_command(label="Update Plot",activeforeground="#80FF75", command=lambda: update_plot(self.active_plot.get()))
 		menu.add_command(label="Save Plot",activeforeground="#80FF75", command=lambda: plt.savefig("{}_{}.png".format(self.name.get(),self.active_plot.get())))
 

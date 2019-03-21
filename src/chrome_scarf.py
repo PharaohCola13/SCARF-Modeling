@@ -107,7 +107,7 @@ class Radio(tk.Frame):
 		def writelrp(dielectric, conductivity, bending, frequency, radio_climate, polarization, frac_sit, frac_time,
 					 erp):
 			fname = filedialog.asksaveasfilename(initialdir="./", title="Leave yo File",
-												 filetypes=[("Irregular Terrian Model Files", "*.lrp")])
+												 filetypes=[("Irregular Terrain Model Files", "*.lrp")])
 			filelrp = open(fname, 'w')
 			filelrp.write(str(dielectric)    	+ "\t; Earth Dielectric Constant (Relative permittivity)" + "\n")
 			filelrp.write(str(conductivity)		+ "\t; Earth Conductivity (Siemens per meter)" + "\n")
@@ -278,25 +278,16 @@ class Radio(tk.Frame):
 			canvas.draw_idle()
 			canvas.draw()
 
-		def temp_alt_dependence(fig, HT, LT,g, M, name, altitude):
-			plt.clf()
-			z = -(R * linspace(LT + 273.15, HT + 273.15) * log(P/P_0))/(g * M)
-			temp_alt = plt.scatter(linspace(LT + 273.15, HT + 273.15), z)
-			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format(name, altitude), pad=20,
-					  fontsize='medium')
-			plt.xlabel("Temperature (K)")
-			plt.ylabel("Altitude (m)")
-			canvas.draw_idle()
-			canvas.draw()
-
 		def path_loss_dependence(fig, D, F, namet,namer, altitude):
 			plt.clf()
 			wave = (2*pi)/F
-			loss =  20*log10((4*pi*linspace(0.69,D))/wave)
-			#loss = 32.45 + 200*log10(F)+20*log(10)
-			path_loss = plt.scatter(linspace(0, D),loss)
+			d = linspace(0.1, D)
+			#U = 16.5 + 15 * log(F/100) - 0.12 * d
+			#U = 0
+			#A = -147.6 + 20 * log(d*F)
+			#loss = -147.6 + 20*log(d*F) + A + U
+			loss = 32.45 + 20 * log10(F) + 20*log10(d/1000)
+			path_loss = plt.scatter(d,loss)
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
 			plt.title("From {} to {}\nPath Loss at {} m".format(namet, namer, altitude), pad=20,
@@ -306,6 +297,25 @@ class Radio(tk.Frame):
 			canvas.draw_idle()
 			canvas.draw()
 
+
+		def soundings(self):
+			plt.clf()
+			fname = filedialog.askopenfilename(title="Get yo file",
+											   filetypes=[("Sounding Data Files", "*.txt")])
+			data = open(fname, 'r')
+			Z,T,P = loadtxt(fname, skiprows=1, unpack=True, usecols=(0,1,2))
+			alt = Z[-1]
+			temp_alt = plt.scatter(T, Z)
+			plt.tick_params(axis='both')
+			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
+			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", alt), pad=20,
+					  fontsize='medium')
+			plt.axvline(273.15)
+			plt.axhline(10000)
+			plt.xlabel("Temperature (K)")
+			plt.ylabel("Altitude (m)")
+			canvas.draw_idle()
+			canvas.draw()
 
 		def super_calc():
 			self.tempavg.set(float(self.temphigh.get()) / 2. + float(self.templow.get()) / 2.)
@@ -332,9 +342,6 @@ class Radio(tk.Frame):
 			elif plot == "path_loss":
 				path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
 						 self.name.get(),self.name2.get(), self.elevation.get())
-			elif plot == "temp_alt":
-				temp_alt_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.location.get(),
-									self.elevation.get())
 			else:
 				def plot_error():
 					top = tk.Toplevel()
@@ -649,7 +656,7 @@ class Radio(tk.Frame):
 		self.lrp_button.grid(row=0, column=1, sticky='new', pady=506)
 
 		self.ecp_button = tk.Button(master, text="Generate ECP File", height=2,
-                                    command=lambda: writeecp(self.humid_scale.get(), self.temphigh.get(), self.templow.get(),
+									command=lambda: writeecp(self.humid_scale.get(), self.temphigh.get(), self.templow.get(),
 														self.elevation.get(), self.abc.get(), self.dielec.get(),
 														self.earthcond.get()))
 		self.ecp_button.grid(row=0, column=1, sticky='new', pady=570)
@@ -671,7 +678,7 @@ class Radio(tk.Frame):
 
 ##
 
-		self.M = ImageTk.PhotoImage(Image.open("Mclass.png"))
+		self.M = ImageTk.PhotoImage(Image.open("images/Mclass.png"))
 		self.mclass = tk.Button(master, image=self.M, command=lambda:self.star.set("M"),
 								highlightcolor="#FF0000", highlightbackground="#FF0000",
 								height=125, width=115)
@@ -681,7 +688,7 @@ class Radio(tk.Frame):
 										 variable=self.star, width=8)
 		self.mclass_opt.grid(row=0, column=0,sticky='nw', pady=605, padx=4)
 
-		self.K = ImageTk.PhotoImage(Image.open("Kclass.png"))
+		self.K = ImageTk.PhotoImage(Image.open("images/Kclass.png"))
 		self.kclass = tk.Button(master, image=self.K, command=lambda:self.star.set("K"),
 								highlightcolor="#FFA200", highlightbackground="#FFA200",
 								height=125, width=115)
@@ -691,7 +698,7 @@ class Radio(tk.Frame):
 										 variable=self.star, width=8)
 		self.kclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=(129,0))
 
-		self.G = ImageTk.PhotoImage(Image.open("Gclass.png"))
+		self.G = ImageTk.PhotoImage(Image.open("images/Gclass.png"))
 		self.gclass = tk.Button(master, image=self.G, command=lambda:self.star.set("G"),
 								highlightcolor="#FAD800", highlightbackground="#FAD800",
 								height=125, width=115)
@@ -701,7 +708,7 @@ class Radio(tk.Frame):
 										 variable=self.star ,width=8)
 		self.gclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=254)
 
-		self.F = ImageTk.PhotoImage(Image.open("Fclass.png"))
+		self.F = ImageTk.PhotoImage(Image.open("images/Fclass.png"))
 		self.fclass = tk.Button(master, image=self.F, command=lambda:self.star.set("F"),
 								highlightcolor="#FFF48B", highlightbackground="#FFF48B",
 								height=125, width=115)
@@ -711,7 +718,7 @@ class Radio(tk.Frame):
 										 variable=self.star, width=8)
 		self.fclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=(379,0))
 
-		self.A = ImageTk.PhotoImage(Image.open("Aclass.png"))
+		self.A = ImageTk.PhotoImage(Image.open("images/Aclass.png"))
 		self.aclass = tk.Button(master, image=self.A, command=lambda:self.star.set("A"),
 								highlightcolor="#8BF4FF", highlightbackground="#8BF4FF",
 								height=125, width=115)
@@ -721,7 +728,7 @@ class Radio(tk.Frame):
 										 variable=self.star, width=8)
 		self.aclass_opt.grid(row=0, column=0, sticky='nw', pady=605, padx=(504,0))
 
-		self.O = ImageTk.PhotoImage(Image.open("Oclass.png"))
+		self.O = ImageTk.PhotoImage(Image.open("images/Oclass.png"))
 		self.oclass = tk.Button(master, image=self.O, command=lambda: self.star.set("O"),
 								highlightcolor=dimf, highlightbackground=dimf,
 								height=125, width=115)
@@ -731,7 +738,7 @@ class Radio(tk.Frame):
 										 variable=self.star, width=8)
 		self.oclass_opt.grid(row=0, column=0, sticky='nw', pady=750, padx=(4, 0))
 
-		self.D = ImageTk.PhotoImage(Image.open("Dclass.png"))
+		self.D = ImageTk.PhotoImage(Image.open("images/Dclass.png"))
 		self.dclass = tk.Button(master, image=self.D, command=lambda:self.star.set("D"),
 								height=125, width=115)
 		self.dclass.grid(row=0, column=0, sticky='nw', pady=747, padx=(125,0))
@@ -803,6 +810,8 @@ class Radio(tk.Frame):
 		plotmenu.add_radiobutton(label="Path Loss", variable=self.active_plot, value="path_loss",
 								 command=lambda: path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
 																	  self.name.get(),self.name2.get(), self.elevation.get()))
+		plotmenu.add_radiobutton(label="Sounding", variable=self.active_plot, value="sound",
+								 command=lambda: soundings(self))
 		tempplot = tk.Menu(plotmenu)
 		plotmenu.add_cascade(label="Temperature", menu=tempplot)
 
@@ -818,9 +827,7 @@ class Radio(tk.Frame):
 								 command=lambda: temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	  self.humid_scale.get(), self.name.get(),
 																	  self.elevation.get()))
-	#	tempplot.add_radiobutton(label="Temp. vs Altitude", variable=self.active_plot, value="temp_alt",
-	#							 command=lambda: temp_alt_dependence(self.fig, self.temphigh.get(), self.templow.get(), self.location.get(),
-	#								self.elevation.get()))
+
 		menu.add_command(label="Update Plot",activeforeground="#80FF75", command=lambda: update_plot(self.active_plot.get()))
 		menu.add_command(label="Save Plot",activeforeground="#80FF75", command=lambda: plt.savefig("{}_{}.png".format(self.name.get(),self.active_plot.get())))
 
@@ -870,7 +877,7 @@ class Radio(tk.Frame):
 
 if __name__ == '__main__':
 	root = tk.Tk()
-	icon = ImageTk.PhotoImage(file='icon.png')
+	icon = ImageTk.PhotoImage(file='images/icon.png')
 	root.tk.call('wm', 'iconphoto', root._w, icon)
 
 	Radio(root)
