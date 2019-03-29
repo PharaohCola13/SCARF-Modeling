@@ -29,7 +29,7 @@ day = '#c6dcff'
 dayf = '#008721'
 days = '#e500ff'
 
-root_width = 1220
+root_width = 1150
 root_height = 720
 offset = 0
 
@@ -253,14 +253,33 @@ class Radio(tk.Frame):
 			return z
 
 		def distance(self):
+			h 		= self.antenna_alt.get()
 			phi1    = deg2rad(float(self.lat_dms_deg.get()      + self.lat_dms_min.get()/60.      + self.lat_dms_sec.get()/3600.))
 			phi2    = deg2rad(float(self.lat_dms_deg2.get()     + self.lat_dms_min2.get()/60.     + self.lat_dms_sec2.get()/3600.))
 			long1   = deg2rad(float(self.long_dms_deg.get()     + self.long_dms_min.get()/60.     + self.long_dms_sec.get()/3600.))
 			long2   = deg2rad(float(self.long_dms_deg2.get()    + self.long_dms_min2.get()/60.    + self.long_dms_sec2.get()/3600.))
 			r = self.mean_rad.get()
+			#D = sqrt(2*r * h + h**2)
 			D = r*absolute(arctan((sqrt((cos(phi2) * sin(long2-long1))**2 + (cos(phi1) * sin(phi2) - sin(phi1) * cos(phi2) * cos(long2-long1))**2)/(sin(phi1)*sin(phi2) + cos(phi1)*cos(phi2)*cos(long2-long1)))))
 			return D
 
+		def fresnel_zone(d):
+			w 	= (3e8)/self.frequency.get()
+		#	d 	= self.dist.get()/2
+			F_n = sqrt((w*d*d)/(d+d))
+			return F_n
+
+		def fresnel_dependence(fig, name):
+			plt.clf()
+			fres = plt.scatter(linspace(0, self.dist.get()), fresnel_zone(linspace(0.1, self.dist.get()/2)))
+			plt.tick_params(axis='both')
+			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
+			plt.title("Location: {}\nFresnel Zone Clearance".format(name),pad=20,
+					  fontsize='medium')
+			plt.xlabel("Distance")
+			plt.ylabel("Fresnel Zone Radius")
+			canvas.draw_idle()
+			canvas.draw()
 
 		def temp_abc_dependence(fig, HT, LT, e, P, name, altitude):
 			plt.clf()
@@ -300,20 +319,18 @@ class Radio(tk.Frame):
 
 		def path_loss_dependence(fig, D, F, namet,namer, altitude):
 			plt.clf()
-			wave = (2*pi)/F
-			d = linspace(0.1, D)
-			#U = 16.5 + 15 * log(F/100) - 0.12 * d
-			#U = 0
-			#A = -147.6 + 20 * log(d*F)
-			#loss = -147.6 + 20*log(d*F) + A + U
-			loss = 32.45 + 20 * log10(F) + 20*log10(d/1000)
-			path_loss = plt.scatter(d,loss)
+			d = arange(0.1, self.dist.get(), 0.001)
+			h = self.antenna_alt.get()
+			loss = 32.45 + 20 * log10(F) + 20*log10(d*h)
+			path_loss = plt.scatter(d,loss, marker="_")
 			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("From {} to {}\nPath Loss at {} m".format(namet, namer, altitude), pad=20,
+			plt.ticklabel_format(axis='both', useMathText=True)
+			plt.title("Path loss profile between {} and {} at {} m".format(namet, namer, altitude), pad=20,
 					  fontsize='medium')
+			plt.xlim(0)
 			plt.xlabel("Distance (km)")
 			plt.ylabel("Path Loss (dB)")
+			plt.grid(color='k', linestyle='--', linewidth=0.5)
 			canvas.draw_idle()
 			canvas.draw()
 
@@ -325,10 +342,11 @@ class Radio(tk.Frame):
 			data = open(fname, 'r')
 			Z = loadtxt(fname, skiprows=1, unpack=True)[0]
 			T = loadtxt(fname, skiprows=1, unpack=True)[1]
+			P = loadtxt(fname, skiprows=1, unpack=True)[2]
 			temp_alt = plt.scatter(T, Z)
 			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", Z[-1]), pad=20,
+			plt.ticklabel_format(axis='both', style='sci', useMathText=True)
+			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", max(Z)), pad=20,
 					  fontsize='medium')
 			plt.axvline(273.15)
 			plt.axhline(10)
@@ -361,6 +379,10 @@ class Radio(tk.Frame):
 			elif plot == "path_loss":
 				path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
 									 self.name.get(),self.name2.get(), self.elevation.get())
+			elif plot == "sound":
+				soundings(self)
+			elif plot == "fresnel":
+				fresnel_dependence(self.fig)
 			else:
 				def plot_error():
 					top = tk.Toplevel()
@@ -410,43 +432,43 @@ class Radio(tk.Frame):
 		self.lat_dms_label.grid(row=0, column=3, sticky='nw')
 
 		self.lat_dms_d = tk.Entry(master, width=4, textvariable=self.lat_dms_deg)
-		self.lat_dms_d.grid(row=0, column=4, sticky='new')
+		self.lat_dms_d.grid(row=0, column=3, sticky='new', padx=(50,0))
 
 		self.deg_la = tk.Label(master, text=u"\u00B0", font=('Times', 13))
-		self.deg_la.grid(row=0, column=5, sticky='new')
+		self.deg_la.grid(row=0, column=4, sticky='nw', padx=(0,120))
 
 		self.lat_dms_m = tk.Entry(master, width=4, textvariable=self.lat_dms_min)
-		self.lat_dms_m.grid(row=0, column=6, sticky='new')
+		self.lat_dms_m.grid(row=0, column=4, columnspan=1,sticky='nw', padx=(10,0))
 
 		self.min_la = tk.Label(master, text="'", font=('Times', 13))
-		self.min_la.grid(row=0, column=7, sticky='new')
+		self.min_la.grid(row=0, column=4, sticky='nw', padx=(40,0))
 
 		self.lat_dms_s = tk.Entry(master, width=5, textvariable=self.lat_dms_sec)
-		self.lat_dms_s.grid(row=0, column=8, columnspan=2, sticky='new')
+		self.lat_dms_s.grid(row=0, column=4, sticky='nw', padx=(50,0))
 
 		self.sec_la = tk.Label(master, text="''", font=('Times', 13))
-		self.sec_la.grid(row=0, column=10, sticky='new')
+		self.sec_la.grid(row=0, column=4, sticky='nw', padx=(90,0))
 
 		self.long_dms_label = tk.Label(master, text="Longitude:")
-		self.long_dms_label.grid(row=0, column=12, sticky='nw')
+		self.long_dms_label.grid(row=0, column=4, sticky='nw', padx=(100,0))
 
 		self.long_dms_d = tk.Entry(master, width=4, textvariable=self.long_dms_deg)
-		self.long_dms_d.grid(row=0, column=13, sticky='new', padx=(0, 0))
+		self.long_dms_d.grid(row=0, column=4, sticky='nw', padx=(160, 0))
 
 		self.deg_lo = tk.Label(master, text=u"\u00B0", font=('Times', 13))
-		self.deg_lo.grid(row=0, column=14, sticky='n')
+		self.deg_lo.grid(row=0, column=4, sticky='nw', padx=(190,0))
 
 		self.long_dms_m = tk.Entry(master, width=4, textvariable=self.long_dms_min)
-		self.long_dms_m.grid(row=0, column=15, sticky='new')
+		self.long_dms_m.grid(row=0, column=4, sticky='nw', padx=(200,0))
 
 		self.min_lo = tk.Label(master, text="'", font=('Times', 13))
-		self.min_lo.grid(row=0, column=16, sticky='new')
+		self.min_lo.grid(row=0, column=4, sticky='nw', padx=(230,0))
 
 		self.long_dms_s = tk.Entry(master, width=5, textvariable=self.long_dms_sec)
-		self.long_dms_s.grid(row=0, column=17, columnspan=3, sticky='new', )
+		self.long_dms_s.grid(row=0, column=4, sticky='nw', padx=(240.0))
 
 		self.sec_lo = tk.Label(master, text="''", font=('Times', 13))
-		self.sec_lo.grid(row=0, column=20, sticky='new')
+		self.sec_lo.grid(row=0, column=4, sticky='nw', padx=(280,0))
 
 ## Location 2
 
@@ -462,43 +484,43 @@ class Radio(tk.Frame):
 		self.lat_dms_label2.grid(row=0, column=3, sticky='nw', pady=30)
 
 		self.lat_dms_d2 = tk.Entry(master, width=4, textvariable=self.lat_dms_deg2)
-		self.lat_dms_d2.grid(row=0, column=4, sticky='new', pady=30)
+		self.lat_dms_d2.grid(row=0, column=3, sticky='new', pady=30, padx=(50,0))
 
 		self.deg_la2 = tk.Label(master, text=u"\u00B0", font=('Times', 13))
-		self.deg_la2.grid(row=0, column=5, sticky='new', pady=30)
+		self.deg_la2.grid(row=0, column=4, sticky='nw', pady=30, padx=(0,120))
 
 		self.lat_dms_m2 = tk.Entry(master, width=4, textvariable=self.lat_dms_min2)
-		self.lat_dms_m2.grid(row=0, column=6, sticky='new', pady=30)
+		self.lat_dms_m2.grid(row=0, column=4,columnspan=1, sticky='nw', pady=30, padx=(10,0))
 
 		self.min_la2 = tk.Label(master, text="'", font=('Times', 13))
-		self.min_la2.grid(row=0, column=7, sticky='new', pady=30)
+		self.min_la2.grid(row=0, column=4, sticky='nw', pady=30, padx=(40,0))
 
 		self.lat_dms_s2 = tk.Entry(master, width=5, textvariable=self.lat_dms_sec2)
-		self.lat_dms_s2.grid(row=0, column=8, columnspan=2, sticky='new', pady=30)
+		self.lat_dms_s2.grid(row=0, column=4, sticky='nw', pady=30, padx=(50,0))
 
 		self.sec_la2 = tk.Label(master, text="''", font=('Times', 13))
-		self.sec_la2.grid(row=0, column=10, sticky='new', pady=30)
+		self.sec_la2.grid(row=0, column=4, sticky='nw', pady=30, padx=(90,0))
 
 		self.long_dms_label2 = tk.Label(master, text="Longitude:")
-		self.long_dms_label2.grid(row=0, column=12, sticky='nw', pady=30)
+		self.long_dms_label2.grid(row=0, column=4, sticky='nw', pady=30, padx=(100,0))
 
 		self.long_dms_d2 = tk.Entry(master, width=4, textvariable=self.long_dms_deg2)
-		self.long_dms_d2.grid(row=0, column=13, sticky='new', padx=(0, 0), pady=30)
+		self.long_dms_d2.grid(row=0, column=4, sticky='nw', pady=30, padx=(160,0))
 
 		self.deg_lo2 = tk.Label(master, text=u"\u00B0", font=('Times', 13))
-		self.deg_lo2.grid(row=0, column=14, sticky='n', pady=30)
+		self.deg_lo2.grid(row=0, column=4, sticky='nw', pady=30, padx=(190,0))
 
 		self.long_dms_m2 = tk.Entry(master, width=4, textvariable=self.long_dms_min2)
-		self.long_dms_m2.grid(row=0, column=15, sticky='new', pady=30)
+		self.long_dms_m2.grid(row=0, column=4, sticky='nw', pady=30, padx=(200,0))
 
 		self.min_lo2 = tk.Label(master, text="'", font=('Times', 13))
-		self.min_lo2.grid(row=0, column=16, sticky='new', pady=30)
+		self.min_lo2.grid(row=0, column=4, sticky='nw', pady=30, padx=(230,0))
 
 		self.long_dms_s2 = tk.Entry(master, width=5, textvariable=self.long_dms_sec2)
-		self.long_dms_s2.grid(row=0, column=17, columnspan=3, pady=30, sticky='new', )
+		self.long_dms_s2.grid(row=0, column=4, pady=30, sticky='nw', padx=(240,0))
 
 		self.sec_lo2 = tk.Label(master, text="''", font=('Times', 13))
-		self.sec_lo2.grid(row=0, column=20, sticky='new', pady=30)
+		self.sec_lo2.grid(row=0, column=4, sticky='nw', pady=30, padx=(280,0))
 
 		##
 
@@ -536,8 +558,8 @@ class Radio(tk.Frame):
 		self.humid_label = tk.Label(master, text="Rel. Humidity" + " " * 2 + "(%)")
 		self.humid_label.grid(row=0, column=3, sticky='nw', pady=110)
 
-		self.humid_scale = tk.Scale(master, from_=0, to=100, resolution=10, orient=tk.HORIZONTAL, width=15)
-		self.humid_scale.grid(row=0, column=4, columnspan=8, sticky='new', pady=93)
+		self.humid_scale = tk.Scale(master, from_=0, to=100, resolution=10, orient=tk.HORIZONTAL, width=15, length=255)
+		self.humid_scale.grid(row=0, column=4,columnspan=2, sticky='nw', pady=93)
 		self.humid_scale.set(50)
 
 		self.humid_avg_label = tk.Label(master, text="Avg. Humidity" + " " * 1 + "(mbar)")
@@ -552,11 +574,16 @@ class Radio(tk.Frame):
 		self.press_avg_calc = tk.Entry(master, textvariable=self.pressavg, width=8)
 		self.press_avg_calc.grid(row=0, column=4, sticky='nw', columnspan=1, pady=170)
 
-		##
+		self.antenna_alt_label = tk.Label(master, text="Antenna Height")
+		self.antenna_alt_label.grid(row=0, column=4, sticky='nw', pady=140, padx=(100,0))
+
+		self.antenna_alt_entry = tk.Entry(master, textvariable=self.antenna_alt, width=8)
+		self.antenna_alt_entry.grid(row=0, column=4, sticky='nw', pady=140, padx=(200,0))
 # LRP File Contents
 ##
 		self.lrp_value_label = tk.Label(master, text="--- LRP Quantities ---")
-		self.lrp_value_label.grid(row=0, column=1, columnspan=2, sticky='new', pady=250)
+		self.lrp_value_label.grid(row=0, column=1, columnspan=2, sticky='new', pady=255)
+		self.lrp_value_label.config(bg=dim, fg="#FFF300", activebackground=dim, font=('Times', 9))
 
 		self.dielectric_label = tk.Label(master, text="Dielectric Constant")
 		self.dielectric_label.grid(row=0, column=1, sticky='nw', pady=280)
@@ -601,78 +628,79 @@ class Radio(tk.Frame):
 		self.erp_entry.grid(row=0, column=2, sticky='new', pady=460)
 ##
 		self.radio_climate_label = tk.Label(master, text="--- Radio Climate Codes ---")
-		self.radio_climate_label.grid(row=0, column=3, columnspan=3, sticky='new', pady=250)
+		self.radio_climate_label.grid(row=0, column=3,columnspan=4, sticky='nw', pady=255)
+		self.radio_climate_label.config(bg=dim, fg="#FFF300", activebackground=dim, font=('Times', 9))
 
 		self.climate_one = tk.Radiobutton(master, text="Equatorial", value=1, variable=self.rad_cli)
-		self.climate_one.grid(row=0, column=3, columnspan=3, sticky='nw', pady=280)
+		self.climate_one.grid(row=0, column=3, columnspan=4, sticky='nw', pady=280)
 
 		self.climate_two = tk.Radiobutton(master, text="Continental Subtropical", value=2, variable=self.rad_cli)
-		self.climate_two.grid(row=0, column=3, columnspan=3, sticky='nw', pady=300)
+		self.climate_two.grid(row=0, column=3, columnspan=4, sticky='nw', pady=300)
 
 		self.climate_three = tk.Radiobutton(master, text="Maritime Suptropical", value=3, variable=self.rad_cli)
-		self.climate_three.grid(row=0, column=3, columnspan=3, sticky='nw', pady=320)
+		self.climate_three.grid(row=0, column=3, columnspan=4, sticky='nw', pady=320)
 
 		self.climate_four = tk.Radiobutton(master, text="Desert", value=4, variable=self.rad_cli)
-		self.climate_four.grid(row=0, column=3, columnspan=3, sticky='nw', pady=340)
+		self.climate_four.grid(row=0, column=3, columnspan=4, sticky='nw', pady=340)
 
 		self.climate_five = tk.Radiobutton(master, text="Continental Temperate", value=5, variable=self.rad_cli)
-		self.climate_five.grid(row=0, column=3, columnspan=3, sticky='nw', pady=360)
+		self.climate_five.grid(row=0, column=3, columnspan=4, sticky='nw', pady=360)
 
 		self.climate_six = tk.Radiobutton(master, text="Maritime Temperate (land)", value=6, variable=self.rad_cli)
-		self.climate_six.grid(row=0, column=3, columnspan=3, sticky='nw', pady=380)
+		self.climate_six.grid(row=0, column=3, columnspan=4, sticky='nw', pady=380)
 
 		self.climate_seven = tk.Radiobutton(master, text="Maritime Temperate (sea)", value=7, variable=self.rad_cli)
-		self.climate_seven.grid(row=0, column=3, columnspan=3, sticky='nw', pady=400)
+		self.climate_seven.grid(row=0, column=3, columnspan=4, sticky='nw', pady=400)
 ##
 		self.ant_orient_label = tk.Label(master, text="--- Antenna Orientation ---")
-		self.ant_orient_label.grid(row=0, column=5, columnspan=6, sticky='new', pady=250)
+		self.ant_orient_label.grid(row=0, column=3, columnspan=4, sticky='nw', pady=420, padx=(0,0))
+		self.ant_orient_label.config(bg=dim, fg="#FFF300", activebackground=dim, font=('Times', 9))
 
 		self.ant_hori = tk.Radiobutton(master, text="Horizontal", value=0, variable=self.ant_orient)
-		self.ant_hori.grid(row=0, column=5, columnspan=5, sticky='nw', pady=280)
+		self.ant_hori.grid(row=0, column=3, columnspan=4, sticky='nw', pady=440, padx=(0,0))
 		self.ant_vert = tk.Radiobutton(master, text="Vertical", value=1, variable=self.ant_orient)
-		self.ant_vert.grid(row=0, column=5, columnspan=5, sticky='nw', pady=300)
+		self.ant_vert.grid(row=0, column=3, columnspan=4, sticky='nw', pady=460, padx=(0,0))
 
 
 		self.grav_acc_label = tk.Label(master, text="Grav. Acc. (m/s^2)")
-		self.grav_acc_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=280)
+		self.grav_acc_label.grid(row=0, column=4, sticky='nw', pady=280, padx=(100,0))
 
 		self.grav_acc_entry = tk.Entry(master, textvariable=self.grav_acc, width=8)
-		self.grav_acc_entry.grid(row=0, column=16, columnspan=5,sticky='new', pady=280)
+		self.grav_acc_entry.grid(row=0, column=4, sticky='nw', pady=280, padx=(200,0))
 
 		self.atmo_mole_label = tk.Label(master, text="Atmos. Molar Mass")
-		self.atmo_mole_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=310)
+		self.atmo_mole_label.grid(row=0, column=4,sticky='nw', pady=310, padx=(100,0))
 
 		self.atmo_mole_entry = tk.Entry(master, textvariable=self.atmo_mole, width=8)
-		self.atmo_mole_entry.grid(row=0, column=16,columnspan=5, sticky='new', pady=310)
+		self.atmo_mole_entry.grid(row=0, column=4, sticky='nw', pady=310, padx=(200,0))
 
 		self.bfield_label = tk.Label(master, text="B-Field (G)")
-		self.bfield_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=340)
+		self.bfield_label.grid(row=0, column=4,sticky='nw', pady=340, padx=(100,0))
 
 		self.bfield_entry = tk.Entry(master, textvariable=self.bfield, width=8)
-		self.bfield_entry.grid(row=0, column=16, columnspan=5, sticky='new', pady=340)
+		self.bfield_entry.grid(row=0, column=4,sticky='nw', pady=340, padx=(200,0))
 
 		self.bfield_rel_label = tk.Label(master, text="Rel. B-Field (G)")
-		self.bfield_rel_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=370)
+		self.bfield_rel_label.grid(row=0, column=4, sticky='nw', pady=370, padx=(100,0))
 
 		self.bfield_rel_entry = tk.Entry(master, textvariable=self.bfield_rel, width=8)
-		self.bfield_rel_entry.grid(row=0, column=16, columnspan=5, sticky='new', pady=370)
+		self.bfield_rel_entry.grid(row=0, column=4, sticky='nw', pady=370, padx=(200,0))
 
 		self.mean_rad_label = tk.Label(master, text="Mean Radius (km)")
-		self.mean_rad_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=400)
+		self.mean_rad_label.grid(row=0, column=4, sticky='nw', pady=400, padx=(100,0))
 
 		self.mean_rad_entry = tk.Entry(master, textvariable=self.mean_rad, width=8)
-		self.mean_rad_entry.grid(row=0, column=16, columnspan=5, sticky='new', pady=400)
+		self.mean_rad_entry.grid(row=0, column=4, sticky='nw', pady=400, padx=(200,0))
 
 		self.dist_label = tk.Label(master, text="Distance (km)")
-		self.dist_label.grid(row=0, column=12, columnspan=4,sticky='nw', pady=430)
+		self.dist_label.grid(row=0, column=4,sticky='nw', pady=430, padx=(100,0))
 
 		self.dist_entry = tk.Entry(master, textvariable=self.dist, width=8)
-		self.dist_entry.grid(row=0, column=16, columnspan=5, sticky='new', pady=430)
-
+		self.dist_entry.grid(row=0, column=4, sticky='nw', pady=430, padx=(200,0))
 
 		self.pan_calc = tk.Button(master, text="Calculate", height=2,
 								  command=lambda: super_calc())
-		self.pan_calc.grid(row=0, column=12, columnspan=4,sticky='new', pady=502)
+		self.pan_calc.grid(row=0, column=4,sticky='nw', pady=502, padx=(200,0))
 
 ##
 # Create LRP File
@@ -692,14 +720,12 @@ class Radio(tk.Frame):
 															 self.elevation.get(), self.abc.get(), self.dielec.get(),
 															 self.earthcond.get()))
 		self.ecp_button.grid(row=0, column=1, sticky='new', pady=550)
-
-##
 ##
 # Notes
 ##
-		self.notes_input = tk.Text(master, width=42, height=11, font=('Times', 10), fg="#00d1ff", bg="#282d2f",
+		self.notes_input = tk.Text(master, width=50, height=11, font=('Times', 10), fg="#00d1ff", bg="#282d2f",
 								   cursor="star", insertbackground="#00d1ff")
-		self.notes_input.grid(row=0, column=2, columnspan=10, sticky='new', pady=502)
+		self.notes_input.grid(row=0, column=2, columnspan=3,sticky='nw', pady=502)
 
 		self.notes_button = tk.Button(master, text="Export Notes", height=2, command=lambda: write_notes())
 		self.notes_button.grid(row=0, column=1, sticky='new', pady=598)
@@ -820,23 +846,25 @@ class Radio(tk.Frame):
 		plotmenu = tk.Menu(menu)
 		menu.add_cascade(label="Correlations", menu=plotmenu)
 
-		plotmenu.add_radiobutton(label="Path Loss", variable=self.active_plot, value="path_loss",
+		plotmenu.add_radiobutton(label="Path Loss", variable=self.active_plot, value="path_loss",selectcolor=dimf,
 								 command=lambda: path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
 																	  self.name.get(),self.name2.get(), self.elevation.get()))
-		plotmenu.add_radiobutton(label="Sounding", variable=self.active_plot, value="sound",
+		plotmenu.add_radiobutton(label="Sounding", variable=self.active_plot, value="sound",selectcolor=dimf,
 								 command=lambda: soundings(self))
+		plotmenu.add_radiobutton(label="Fresnel Zone", variable=self.active_plot, value="fresnel",selectcolor=dimf,
+								 command=lambda: fresnel_dependence(self.fig))
 		tempplot = tk.Menu(plotmenu)
 		plotmenu.add_cascade(label="Temperature", menu=tempplot)
 
-		tempplot.add_radiobutton(label="Temp. vs. A.B.C.", variable=self.active_plot, value="temp_abc",
+		tempplot.add_radiobutton(label="Temp. vs. A.B.C.", variable=self.active_plot, value="temp_abc",selectcolor=dimf,
 								 command=lambda: temp_abc_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	 self.humiavg.get(), self.pressavg.get(),
 																	 self.name.get(), self.elevation.get()))
-		tempplot.add_radiobutton(label="Temp. vs Pressure", variable=self.active_plot, value="temp_pres",
+		tempplot.add_radiobutton(label="Temp. vs Pressure", variable=self.active_plot, value="temp_pres",selectcolor=dimf,
 								 command=lambda: temp_press_dependence(self.fig, self.temphigh.get(),
 																	   self.templow.get(), self.elevation.get(),
 																	   self.name.get()))
-		tempplot.add_radiobutton(label="Temp. vs Humidity", variable=self.active_plot, value="temp_humi",
+		tempplot.add_radiobutton(label="Temp. vs Humidity", variable=self.active_plot, value="temp_humi",selectcolor=dimf,
 								 command=lambda: temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	  self.humid_scale.get(), self.name.get(),
 																	  self.elevation.get()))
@@ -845,8 +873,8 @@ class Radio(tk.Frame):
 
 		def design(self):
 			master.config(background=dim)
-			labels = [self.frac_sit_label, self.ant_orient_label,
-					  self.erp_label, self.radio_climate_label, self.frac_tim_label,
+			labels = [self.frac_sit_label,
+					  self.erp_label, self.frac_tim_label,
 					  self.frequency_label, self.ground_cond_label, self.dielectric_label,
 					  self.abc_label, self.press_avg_label, self.humid_avg_label, self.humid_label,
 					  self.elevation_label, self.temp_avg_label, self.temp_low_label,
@@ -854,8 +882,8 @@ class Radio(tk.Frame):
 					  self.deg_lo, self.min_lo, self.sec_lo, self.deg_la, self.min_la, self.sec_la,
 					  self.bfield_label, self.bfield_rel_label, self.gclass, self.mclass, self.oclass, self.dclass, self.kclass,
 					  self.fclass, self.aclass, self.long_dms_label2, self.deg_lo2, self.min_lo2, self.sec_lo2,
-					  self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.atmo_mole_label, self.grav_acc_label,
-					  self.lrp_value_label]
+					  self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.atmo_mole_label,
+					  self.grav_acc_label, self.antenna_alt_label]
 			button = [self.lrp_button, self.pan_calc, self.createqth, self.notes_button, self.ecp_button, self.note_insert]
 			scales = [self.humid_scale]
 			menus = [menu, filemenu, plotmenu, tempplot, exportmenu, importmenu]
@@ -866,7 +894,7 @@ class Radio(tk.Frame):
 					 self.lat_dms_d, self.lat_dms_m, self.lat_dms_s, self.bfield_entry, self.bfield_rel_entry,
 					 self.frac_sit_entry,self.name_entry2, self.long_dms_d2, self.long_dms_m2, self.long_dms_s2,
 					 self.lat_dms_d2, self.lat_dms_m2, self.lat_dms_s2,self.mean_rad_entry, self.dist_entry,
-					 self.atmo_mole_entry, self.grav_acc_entry]
+					 self.atmo_mole_entry, self.grav_acc_entry, self.antenna_alt_entry]
 			radio = [self.ant_hori, self.ant_vert, self.climate_one, self.climate_two, self.climate_three,
 					 self.climate_four, self.climate_five, self.climate_six, self.climate_seven, self.name_one,self.name_two]
 
