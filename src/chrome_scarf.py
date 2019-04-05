@@ -835,7 +835,7 @@ class Radio(tk.Frame):
 		def design(self):
 			master.config(background=dim)
 			labels = [self.frac_sit_label, self.ant_orient_label,
-					  self.erp_label, self.radio_climate_label, self.frac_tim_label,
+					  self.erp_label, self.frac_tim_label,
 					  self.frequency_label, self.ground_cond_label, self.dielectric_label,
 					  self.abc_label, self.press_avg_label, self.humid_avg_label, self.humid_label,
 					  self.elevation_label, self.temp_avg_label, self.temp_low_label,

@@ -3,13 +3,9 @@ import matplotlib
 matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import mpl_toolkits.mplot3d.axes3d as p3
 from matplotlib.animation import *
 from numpy import *
-import datetime
 from PIL import Image, ImageTk
-import sys
-from time import sleep
 
 try:
 	import tkinter as tk
@@ -44,6 +40,7 @@ class Radio(tk.Frame):
 		self.createWidgets(master)
 
 	def createWidgets(self, master):
+		global root_height
 		self.fig            = plt.figure(figsize=(5, 5))
 
 		self.name           = tk.StringVar(value="Steve")
@@ -259,19 +256,19 @@ class Radio(tk.Frame):
 			long1   = deg2rad(float(self.long_dms_deg.get()     + self.long_dms_min.get()/60.     + self.long_dms_sec.get()/3600.))
 			long2   = deg2rad(float(self.long_dms_deg2.get()    + self.long_dms_min2.get()/60.    + self.long_dms_sec2.get()/3600.))
 			r = self.mean_rad.get()
-			#D = sqrt(2*r * h + h**2)
 			D = r*absolute(arctan((sqrt((cos(phi2) * sin(long2-long1))**2 + (cos(phi1) * sin(phi2) - sin(phi1) * cos(phi2) * cos(long2-long1))**2)/(sin(phi1)*sin(phi2) + cos(phi1)*cos(phi2)*cos(long2-long1)))))
 			return D
 
 		def fresnel_zone(d):
 			w 	= (3e8)/self.frequency.get()
-		#	d 	= self.dist.get()/2
 			F_n = sqrt((w*d*d)/(d+d))
 			return F_n
 
 		def fresnel_dependence(fig, name):
 			plt.clf()
-			fres = plt.scatter(linspace(0, self.dist.get()), fresnel_zone(linspace(0.1, self.dist.get()/2)))
+			dist = linspace(0, self.dist.get())	# Distance Array
+			zone = fresnel_zone(linspace(0.1, self.dist.get()/2)) # Fresnel Zone Clearance
+			fres = plt.scatter(dist, zone)
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
 			plt.title("Location: {}\nFresnel Zone Clearance".format(name),pad=20,
@@ -283,7 +280,10 @@ class Radio(tk.Frame):
 
 		def temp_abc_dependence(fig, HT, LT, e, P, name, altitude):
 			plt.clf()
-			temp_abc = plt.scatter(linspace(LT + 273.15, HT + 273.15), atmo_bend(e, linspace(LT, HT), P))
+			temp 	= linspace(LT + 273.15, HT + 273.15) 	# Temperature Array
+			atmo 	= atmo_bend(e, linspace(LT, HT), P)		# Atmospheric Bending Constant
+			temp_abc = plt.scatter(temp, atmo)
+
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
 			plt.title("Location: {}\nTemperature Dependence on the Atmospheric Bending Constant at {} m".format(name,altitude),pad=20,
@@ -295,19 +295,26 @@ class Radio(tk.Frame):
 
 		def temp_press_dependence(fig, HT, LT, altitude, name):
 			plt.clf()
-			temp_press = plt.scatter(linspace(LT + 273.15, HT + 273.15), pressure(altitude, linspace(LT, HT)))
+			temp 	= linspace(LT + 273.15, HT + 273.15)	# Temperature Array
+			pres 	= pressure(altitude, linspace(LT, HT))	# Pressure
+			temp_press = plt.scatter(temp, pres)
+
 			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
+			plt.ticklabel_format(axis='both',style='sci', useMathText=True, useOffset=None, scilimits=(0,0))
 			plt.title("Location: {}\nTemperature Dependence on Air Pressure at {} m".format(name, altitude), pad=20,
 					  fontsize='medium')
 			plt.xlabel("Temperature (K)")
 			plt.ylabel("Pressure (mbars)")
+			plt.subplots_adjust(bottom=0.16, left=0.16)
 			canvas.draw_idle()
 			canvas.draw()
 
 		def temp_humi_dependence(fig, HT, LT, H, name, altitude):
 			plt.clf()
-			temp_humid = plt.scatter(linspace(LT + 273.15, HT + 273.15), humid_calc(linspace(LT, HT), H))
+			temp 	= linspace(LT + 273.15, HT + 273.15) 	# Temperature Array
+			hum 	= humid_calc(linspace(LT, HT), H) 		# Humidity
+			temp_humid = plt.scatter(temp, hum)
+
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
 			plt.title("Location: {}\nTemperature Dependence on Humidity at {} m".format(name, altitude), pad=20,
@@ -319,10 +326,12 @@ class Radio(tk.Frame):
 
 		def path_loss_dependence(fig, D, F, namet,namer, altitude):
 			plt.clf()
-			d = arange(0.1, self.dist.get(), 0.001)
-			h = self.antenna_alt.get()
-			loss = 32.45 + 20 * log10(F) + 20*log10(d*h)
+			d = arange(0.1, self.dist.get(), 0.001) #Distance Array
+			Gt = 1 # Transmitter Gain
+			Gr = 0 # Receiver Gain
+			loss = 20*log10(d*1000) + 20 * log10(F * 10**6) + 20 * log10((4*pi)/c) - Gt - Gr
 			path_loss = plt.scatter(d,loss, marker="_")
+
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', useMathText=True)
 			plt.title("Path loss profile between {} and {} at {} m".format(namet, namer, altitude), pad=20,
@@ -338,18 +347,18 @@ class Radio(tk.Frame):
 		def soundings(self):
 			plt.clf()
 			fname = filedialog.askopenfilename(title="Get yo file",
-											   filetypes=[("Sounding Data Files", "*.txt")])
+											   filetypes=[("Sounding Data Files", "*.txt")], initialdir="../data/sounding/")
 			data = open(fname, 'r')
-			Z = loadtxt(fname, skiprows=1, unpack=True)[0]
-			T = loadtxt(fname, skiprows=1, unpack=True)[1]
-			P = loadtxt(fname, skiprows=1, unpack=True)[2]
+			Z = loadtxt(fname, skiprows=1, unpack=True)[0] # Altitude from data
+			T = loadtxt(fname, skiprows=1, unpack=True)[1] # Temperature from data
+			P = loadtxt(fname, skiprows=1, unpack=True)[2] # Pressure from data
 			temp_alt = plt.scatter(T, Z)
+
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True)
 			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", max(Z)), pad=20,
 					  fontsize='medium')
 			plt.axvline(273.15)
-			plt.axhline(10)
 			plt.xlabel("Temperature (K)")
 			plt.ylabel("Altitude (km)")
 			canvas.draw_idle()
@@ -852,7 +861,7 @@ class Radio(tk.Frame):
 		plotmenu.add_radiobutton(label="Sounding", variable=self.active_plot, value="sound",selectcolor=dimf,
 								 command=lambda: soundings(self))
 		plotmenu.add_radiobutton(label="Fresnel Zone", variable=self.active_plot, value="fresnel",selectcolor=dimf,
-								 command=lambda: fresnel_dependence(self.fig))
+								 command=lambda: fresnel_dependence(self.fig, self.location.get()))
 		tempplot = tk.Menu(plotmenu)
 		plotmenu.add_cascade(label="Temperature", menu=tempplot)
 
@@ -870,6 +879,8 @@ class Radio(tk.Frame):
 																	  self.elevation.get()))
 		menu.add_command(label="Update Plot",activeforeground="#80FF75", command=lambda: update_plot(self.active_plot.get()))
 		menu.add_command(label="Save Plot",activeforeground="#80FF75", command=lambda: plt.savefig("{}_{}.png".format(self.name.get(),self.active_plot.get())))
+		menu.add_command(label="Resize", activeforeground="#80FF75", command=lambda: root.geometry(str(root_width) + "x500"))
+
 
 		def design(self):
 			master.config(background=dim)
@@ -918,14 +929,13 @@ if __name__ == '__main__':
 	root = tk.Tk()
 	icon = ImageTk.PhotoImage(file='images/icon.png')
 	root.tk.call('wm', 'iconphoto', root._w, icon)
+	root.geometry(str(root_width) + "x750")  #
+	root.maxsize(str(root_width), str(750))
+	root.minsize(str(root_width), str(530))
 	Radio(root)
 
 	root.title("SPLAT! Configuration File Generator")
-	root.geometry(str(root_width) + "x" + str(root_height))  #
    # root.attributes('-fullscreen', True)
-
-	#	root.maxsize(str(root_width), str(root_height))
-	#	root.minsize(str(600), str(root_height))
 
 	def quit():
 		global root
