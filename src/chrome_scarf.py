@@ -97,7 +97,7 @@ class Radio(tk.Frame):
 		self.erp            = tk.DoubleVar()
 
 		self.grav_acc 		= tk.DoubleVar()
-		self.atmo_mole		= tk.DoubleVar()
+		self.path_loss		= tk.DoubleVar()
 
 		canvas = FigureCanvasTkAgg(self.fig, master)
 		canvas.get_tk_widget().grid(row=0, column=0, sticky='new')
@@ -233,6 +233,7 @@ class Radio(tk.Frame):
 			return B_rel
 
 		def distance(self):
+			h 		= self.antenna_alt.get()
 			phi1    = deg2rad(float(self.lat_dms_deg.get()      + self.lat_dms_min.get()/60.      + self.lat_dms_sec.get()/3600.))
 			phi2    = deg2rad(float(self.lat_dms_deg2.get()     + self.lat_dms_min2.get()/60.     + self.lat_dms_sec2.get()/3600.))
 			long1   = deg2rad(float(self.long_dms_deg.get()     + self.long_dms_min.get()/60.     + self.long_dms_sec.get()/3600.))
@@ -241,10 +242,37 @@ class Radio(tk.Frame):
 			D = r*absolute(arctan((sqrt((cos(phi2) * sin(long2-long1))**2 + (cos(phi1) * sin(phi2) - sin(phi1) * cos(phi2) * cos(long2-long1))**2)/(sin(phi1)*sin(phi2) + cos(phi1)*cos(phi2)*cos(long2-long1)))))
 			return D
 
+		def fresnel_zone(d):
+			w 	= (3e8)/self.frequency.get()
+			F_n = sqrt((w*d*d)/(d+d))
+			return F_n
+
+		def pathloss(d, F):
+			Gt = 0 # Transmitter Gain
+			Gr = 0 # Receiver Gain
+			loss = 20*log10(d*1000) + 20 * log10(F * 10**6) + 20 * log10((4*pi)/c) - Gt - Gr
+			return loss
+
+		def fresnel_dependence(fig, name):
+			plt.clf()
+			dist = linspace(0, self.dist.get())	# Distance Array
+			zone = fresnel_zone(linspace(0.1, self.dist.get()/2)) # Fresnel Zone Clearance
+			fres = plt.scatter(dist, zone)
+			plt.tick_params(axis='both')
+			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
+			plt.title("Location: {}\nFresnel Zone Clearance".format(name),pad=20,
+					  fontsize='medium')
+			plt.xlabel("Distance")
+			plt.ylabel("Fresnel Zone Radius")
+			canvas.draw_idle()
+			canvas.draw()
 
 		def temp_abc_dependence(fig, HT, LT, e, P, name, altitude):
 			plt.clf()
-			temp_abc = plt.scatter(linspace(LT + 273.15, HT + 273.15), atmo_bend(e, linspace(LT, HT), P))
+			temp 	= linspace(LT + 273.15, HT + 273.15) 	# Temperature Array
+			atmo 	= atmo_bend(e, linspace(LT, HT), P)		# Atmospheric Bending Constant
+			temp_abc = plt.scatter(temp, atmo)
+
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
 			plt.title("Location: {}\nTemperature Dependence on the Atmospheric Bending Constant at {} m".format(name,altitude),pad=20,
@@ -256,19 +284,26 @@ class Radio(tk.Frame):
 
 		def temp_press_dependence(fig, HT, LT, altitude, name):
 			plt.clf()
-			temp_press = plt.scatter(linspace(LT + 273.15, HT + 273.15), pressure(altitude, linspace(LT, HT)))
+			temp 	= linspace(LT + 273.15, HT + 273.15)	# Temperature Array
+			pres 	= pressure(altitude, linspace(LT, HT))	# Pressure
+			temp_press = plt.scatter(temp, pres)
+
 			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
+			plt.ticklabel_format(axis='both',style='sci', useMathText=True, useOffset=None, scilimits=(0,0))
 			plt.title("Location: {}\nTemperature Dependence on Air Pressure at {} m".format(name, altitude), pad=20,
 					  fontsize='medium')
 			plt.xlabel("Temperature (K)")
 			plt.ylabel("Pressure (mbars)")
+			plt.subplots_adjust(bottom=0.16, left=0.16)
 			canvas.draw_idle()
 			canvas.draw()
 
 		def temp_humi_dependence(fig, HT, LT, H, name, altitude):
 			plt.clf()
-			temp_humid = plt.scatter(linspace(LT + 273.15, HT + 273.15), humid_calc(linspace(LT, HT), H))
+			temp 	= linspace(LT + 273.15, HT + 273.15) 	# Temperature Array
+			hum 	= humid_calc(linspace(LT, HT), H) 		# Humidity
+			temp_humid = plt.scatter(temp, hum)
+
 			plt.tick_params(axis='both')
 			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
 			plt.title("Location: {}\nTemperature Dependence on Humidity at {} m".format(name, altitude), pad=20,
@@ -280,20 +315,18 @@ class Radio(tk.Frame):
 
 		def path_loss_dependence(fig, D, F, namet,namer, altitude):
 			plt.clf()
-			wave = (2*pi)/F
-			d = linspace(0.1, D)
-			#U = 16.5 + 15 * log(F/100) - 0.12 * d
-			#U = 0
-			#A = -147.6 + 20 * log(d*F)
-			#loss = -147.6 + 20*log(d*F) + A + U
-			loss = 32.45 + 20 * log10(F) + 20*log10(d/1000)
-			path_loss = plt.scatter(d,loss)
+			d 		= arange(0.1, self.dist.get(), 0.001) #Distance Array
+			loss 	= pathloss(d, F)
+			path_loss = plt.scatter(d,loss, marker="_")
+
 			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("From {} to {}\nPath Loss at {} m".format(namet, namer, altitude), pad=20,
+			plt.ticklabel_format(axis='both', useMathText=True)
+			plt.title("Path loss profile between {} and {} at {} m".format(namet, namer, altitude), pad=20,
 					  fontsize='medium')
+			plt.xlim(0)
 			plt.xlabel("Distance (km)")
 			plt.ylabel("Path Loss (dB)")
+			plt.grid(color='k', linestyle='--', linewidth=0.5)
 			canvas.draw_idle()
 			canvas.draw()
 
@@ -301,19 +334,20 @@ class Radio(tk.Frame):
 		def soundings(self):
 			plt.clf()
 			fname = filedialog.askopenfilename(title="Get yo file",
-											   filetypes=[("Sounding Data Files", "*.txt")])
+											   filetypes=[("Sounding Data Files", "*.txt")], initialdir="../data/sounding/")
 			data = open(fname, 'r')
-			Z,T,P = loadtxt(fname, skiprows=1, unpack=True, usecols=(0,1,2))
-			alt = Z[-1]
+			Z = loadtxt(fname, skiprows=1, unpack=True)[0] # Altitude from data
+			T = loadtxt(fname, skiprows=1, unpack=True)[1] # Temperature from data
+			P = loadtxt(fname, skiprows=1, unpack=True)[2] # Pressure from data
 			temp_alt = plt.scatter(T, Z)
+
 			plt.tick_params(axis='both')
-			plt.ticklabel_format(axis='both', style='sci', useMathText=True, scilimits=(0, 0))
-			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", alt), pad=20,
+			plt.ticklabel_format(axis='both', style='sci', useMathText=True)
+			plt.title("Location: {}\nTemperature Dependence on Altitude to {} m".format("Fix", max(Z)), pad=20,
 					  fontsize='medium')
 			plt.axvline(273.15)
-			plt.axhline(10000)
 			plt.xlabel("Temperature (K)")
-			plt.ylabel("Altitude (m)")
+			plt.ylabel("Altitude (km)")
 			canvas.draw_idle()
 			canvas.draw()
 
@@ -323,7 +357,8 @@ class Radio(tk.Frame):
 			self.pressavg.set(round(pressure(self.elevation.get(), self.tempavg.get()), 3))
 			self.abc.set(str(round(atmo_bend(self.humiavg.get(), self.tempavg.get() + 273.15, self.pressavg.get()), 3)))
 			self.bfield_rel.set("{:0.2E}".format(bfield(self.bfield.get())))
-			self.dist.set(round(distance(self),4))
+			self.dist.set(round(distance(self),2))
+			self.path_loss.set(round(pathloss(self.dist.get(), self.frequency.get()), 2))
 
 
 		def event_super_calc(event):
@@ -528,6 +563,7 @@ class Radio(tk.Frame):
 ##
 		self.lrp_value_label = tk.Label(master, text="--- LRP Quantities ---")
 		self.lrp_value_label.grid(row=0, column=1, columnspan=2, sticky='new', pady=250)
+		self.lrp_value_label.config(bg=dim, fg="#FFF300", activebackground=dim, font=('Times', 9))
 
 		self.dielectric_label = tk.Label(master, text="Dielectric Constant")
 		self.dielectric_label.grid(row=0, column=1, sticky='nw', pady=280)
@@ -574,6 +610,7 @@ class Radio(tk.Frame):
 
 		self.radio_climate_label = tk.Label(master, text="--- Radio Climate Codes ---")
 		self.radio_climate_label.grid(row=0, column=3, columnspan=3, sticky='new', pady=250)
+		self.radio_climate_label.config(bg=dim, fg="#FFF300", activebackground=dim, font=('Times', 9))
 
 		self.climate_one = tk.Radiobutton(master, text="Equatorial", value=1, variable=self.rad_cli)
 		self.climate_one.grid(row=0, column=3, columnspan=3, sticky='nw', pady=280)
@@ -599,6 +636,7 @@ class Radio(tk.Frame):
 
 		self.ant_orient_label = tk.Label(master, text="--- Antenna Orientation ---")
 		self.ant_orient_label.grid(row=0, column=5, columnspan=6, sticky='new', pady=250)
+		self.ant_orient_label.config(bg=dim, fg="#FFF300", activebackground=dim, font=('Times', 9))
 
 		self.ant_hori = tk.Radiobutton(master, text="Horizontal", value=0, variable=self.ant_orient)
 		self.ant_hori.grid(row=0, column=5, columnspan=5, sticky='nw', pady=290)
@@ -612,11 +650,11 @@ class Radio(tk.Frame):
 		self.grav_acc_entry = tk.Entry(master, textvariable=self.grav_acc, width=8)
 		self.grav_acc_entry.grid(row=0, column=16, columnspan=5,sticky='new', pady=280)
 
-		self.atmo_mole_label = tk.Label(master, text="Atmos. Molar Mass")
-		self.atmo_mole_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=310)
+		self.path_loss_label = tk.Label(master, text="Path Loss")
+		self.path_loss_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=310)
 
-		self.atmo_mole_entry = tk.Entry(master, textvariable=self.atmo_mole, width=8)
-		self.atmo_mole_entry.grid(row=0, column=16,columnspan=5, sticky='new', pady=310)
+		self.path_loss_entry = tk.Entry(master, textvariable=self.path_loss, width=8)
+		self.path_loss_entry.grid(row=0, column=16,columnspan=5, sticky='new', pady=310)
 
 		self.bfield_label = tk.Label(master, text="B-Field (G)")
 		self.bfield_label.grid(row=0, column=12, columnspan=4, sticky='nw', pady=340)
@@ -807,23 +845,25 @@ class Radio(tk.Frame):
 		plotmenu = tk.Menu(menu)
 		menu.add_cascade(label="Correlations", menu=plotmenu)
 
-		plotmenu.add_radiobutton(label="Path Loss", variable=self.active_plot, value="path_loss",
+		plotmenu.add_radiobutton(label="Path Loss", variable=self.active_plot, value="path_loss",selectcolor=dimf,
 								 command=lambda: path_loss_dependence(self.fig, self.dist.get(), self.frequency.get(),
 																	  self.name.get(),self.name2.get(), self.elevation.get()))
-		plotmenu.add_radiobutton(label="Sounding", variable=self.active_plot, value="sound",
+		plotmenu.add_radiobutton(label="Sounding", variable=self.active_plot, value="sound",selectcolor=dimf,
 								 command=lambda: soundings(self))
+		plotmenu.add_radiobutton(label="Fresnel Zone", variable=self.active_plot, value="fresnel",selectcolor=dimf,
+								 command=lambda: fresnel_dependence(self.fig, self.location.get()))
 		tempplot = tk.Menu(plotmenu)
 		plotmenu.add_cascade(label="Temperature", menu=tempplot)
 
-		tempplot.add_radiobutton(label="Temp. vs. A.B.C.", variable=self.active_plot, value="temp_abc",
+		tempplot.add_radiobutton(label="Temp. vs. A.B.C.", variable=self.active_plot, value="temp_abc",selectcolor=dimf,
 								 command=lambda: temp_abc_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	 self.humiavg.get(), self.pressavg.get(),
 																	 self.name.get(), self.elevation.get()))
-		tempplot.add_radiobutton(label="Temp. vs Pressure", variable=self.active_plot, value="temp_pres",
+		tempplot.add_radiobutton(label="Temp. vs Pressure", variable=self.active_plot, value="temp_pres",selectcolor=dimf,
 								 command=lambda: temp_press_dependence(self.fig, self.temphigh.get(),
 																	   self.templow.get(), self.elevation.get(),
 																	   self.name.get()))
-		tempplot.add_radiobutton(label="Temp. vs Humidity", variable=self.active_plot, value="temp_humi",
+		tempplot.add_radiobutton(label="Temp. vs Humidity", variable=self.active_plot, value="temp_humi",selectcolor=dimf,
 								 command=lambda: temp_humi_dependence(self.fig, self.temphigh.get(), self.templow.get(),
 																	  self.humid_scale.get(), self.name.get(),
 																	  self.elevation.get()))
@@ -834,7 +874,7 @@ class Radio(tk.Frame):
 
 		def design(self):
 			master.config(background=dim)
-			labels = [self.frac_sit_label, self.ant_orient_label,
+			labels = [self.frac_sit_label,
 					  self.erp_label, self.frac_tim_label,
 					  self.frequency_label, self.ground_cond_label, self.dielectric_label,
 					  self.abc_label, self.press_avg_label, self.humid_avg_label, self.humid_label,
@@ -843,8 +883,7 @@ class Radio(tk.Frame):
 					  self.deg_lo, self.min_lo, self.sec_lo, self.deg_la, self.min_la, self.sec_la,
 					  self.bfield_label, self.bfield_rel_label, self.gclass, self.mclass, self.oclass, self.dclass, self.kclass,
 					  self.fclass, self.aclass, self.long_dms_label2, self.deg_lo2, self.min_lo2, self.sec_lo2,
-					self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.atmo_mole_label, self.grav_acc_label,
-					  self.lrp_value_label]
+					self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.path_loss_label, self.grav_acc_label,]
 			button = [self.lrp_button, self.pan_calc, self.createqth, self.notes_button, self.ecp_button, self.note_insert]
 			scales = [self.humid_scale]
 			menus = [menu, filemenu, plotmenu, tempplot, exportmenu, importmenu]
@@ -855,7 +894,7 @@ class Radio(tk.Frame):
 					 self.lat_dms_d, self.lat_dms_m, self.lat_dms_s, self.bfield_entry, self.bfield_rel_entry,
 					 self.frac_sit_entry,self.name_entry2, self.long_dms_d2, self.long_dms_m2, self.long_dms_s2,
 					 self.lat_dms_d2, self.lat_dms_m2, self.lat_dms_s2,self.mean_rad_entry, self.dist_entry,
-					 self.atmo_mole_entry, self.grav_acc_entry]
+					 self.path_loss_entry, self.grav_acc_entry]
 			radio = [self.ant_hori, self.ant_vert, self.climate_one, self.climate_two, self.climate_three,
 					 self.climate_four, self.climate_five, self.climate_six, self.climate_seven, self.name_one,self.name_two]
 

@@ -103,7 +103,7 @@ class Radio(tk.Frame):
 		self.erp            = tk.DoubleVar()
 
 		self.grav_acc 		= tk.DoubleVar()
-		self.atmo_mole		= tk.DoubleVar()
+		self.path_loss		= tk.DoubleVar()
 
 		canvas = FigureCanvasTkAgg(self.fig, master)
 		canvas.get_tk_widget().grid(row=0, column=0, sticky='new')
@@ -264,6 +264,12 @@ class Radio(tk.Frame):
 			F_n = sqrt((w*d*d)/(d+d))
 			return F_n
 
+		def pathloss(d, F):
+			Gt = 0 # Transmitter Gain
+			Gr = 0 # Receiver Gain
+			loss = 20*log10(d*1000) + 20 * log10(F * 10**6) + 20 * log10((4*pi)/c) - Gt - Gr
+			return loss
+
 		def fresnel_dependence(fig, name):
 			plt.clf()
 			dist = linspace(0, self.dist.get())	# Distance Array
@@ -326,10 +332,8 @@ class Radio(tk.Frame):
 
 		def path_loss_dependence(fig, D, F, namet,namer, altitude):
 			plt.clf()
-			d = arange(0.1, self.dist.get(), 0.001) #Distance Array
-			Gt = 1 # Transmitter Gain
-			Gr = 0 # Receiver Gain
-			loss = 20*log10(d*1000) + 20 * log10(F * 10**6) + 20 * log10((4*pi)/c) - Gt - Gr
+			d 		= arange(0.1, self.dist.get(), 0.001) #Distance Array
+			loss 	= pathloss(d, F)
 			path_loss = plt.scatter(d,loss, marker="_")
 
 			plt.tick_params(axis='both')
@@ -370,7 +374,8 @@ class Radio(tk.Frame):
 			self.pressavg.set(round(pressure(self.elevation.get(), self.tempavg.get()), 3))
 			self.abc.set(str(round(atmo_bend(self.humiavg.get(), self.tempavg.get() + 273.15, self.pressavg.get()), 3)))
 			self.bfield_rel.set("{:0.2E}".format(bfield(self.bfield.get())))
-			self.dist.set(round(distance(self),4))
+			self.dist.set(round(distance(self),2))
+			self.path_loss.set(round(pathloss(self.dist.get(), self.frequency.get()), 2))
 
 		def event_super_calc(event):
 			super_calc()
@@ -677,11 +682,11 @@ class Radio(tk.Frame):
 		self.grav_acc_entry = tk.Entry(master, textvariable=self.grav_acc, width=8)
 		self.grav_acc_entry.grid(row=0, column=4, sticky='nw', pady=280, padx=(200,0))
 
-		self.atmo_mole_label = tk.Label(master, text="Atmos. Molar Mass")
-		self.atmo_mole_label.grid(row=0, column=4,sticky='nw', pady=310, padx=(100,0))
+		self.path_loss_label = tk.Label(master, text="Path Loss")
+		self.path_loss_label.grid(row=0, column=4,sticky='nw', pady=310, padx=(100,0))
 
-		self.atmo_mole_entry = tk.Entry(master, textvariable=self.atmo_mole, width=8)
-		self.atmo_mole_entry.grid(row=0, column=4, sticky='nw', pady=310, padx=(200,0))
+		self.path_loss_entry = tk.Entry(master, textvariable=self.path_loss, width=8)
+		self.path_loss_entry.grid(row=0, column=4, sticky='nw', pady=310, padx=(200,0))
 
 		self.bfield_label = tk.Label(master, text="B-Field (G)")
 		self.bfield_label.grid(row=0, column=4,sticky='nw', pady=340, padx=(100,0))
@@ -893,7 +898,7 @@ class Radio(tk.Frame):
 					  self.deg_lo, self.min_lo, self.sec_lo, self.deg_la, self.min_la, self.sec_la,
 					  self.bfield_label, self.bfield_rel_label, self.gclass, self.mclass, self.oclass, self.dclass, self.kclass,
 					  self.fclass, self.aclass, self.long_dms_label2, self.deg_lo2, self.min_lo2, self.sec_lo2,
-					  self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.atmo_mole_label,
+					  self.deg_la2, self.min_la2, self.sec_la2, self.mean_rad_label, self.dist_label, self.path_loss_label,
 					  self.grav_acc_label, self.antenna_alt_label]
 			button = [self.lrp_button, self.pan_calc, self.createqth, self.notes_button, self.ecp_button, self.note_insert]
 			scales = [self.humid_scale]
@@ -905,7 +910,7 @@ class Radio(tk.Frame):
 					 self.lat_dms_d, self.lat_dms_m, self.lat_dms_s, self.bfield_entry, self.bfield_rel_entry,
 					 self.frac_sit_entry,self.name_entry2, self.long_dms_d2, self.long_dms_m2, self.long_dms_s2,
 					 self.lat_dms_d2, self.lat_dms_m2, self.lat_dms_s2,self.mean_rad_entry, self.dist_entry,
-					 self.atmo_mole_entry, self.grav_acc_entry, self.antenna_alt_entry]
+					 self.path_loss_entry, self.grav_acc_entry, self.antenna_alt_entry]
 			radio = [self.ant_hori, self.ant_vert, self.climate_one, self.climate_two, self.climate_three,
 					 self.climate_four, self.climate_five, self.climate_six, self.climate_seven, self.name_one,self.name_two]
 
